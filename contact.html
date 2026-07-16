@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact Us — BloodMate</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blood:      #C0152A;
+      --blood-deep: #8B0000;
+      --blood-bright:#E8192C;
+      --ink:        #0D0D0D;
+      --ash:        #1A1A1A;
+      --charcoal:   #2A2A2A;
+      --text-muted: #999;
+      --text-light: #CCCCCC;
+      --white:      #FFFFFF;
+      --green:      #28C840;
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-ui:    'Bebas Neue', sans-serif;
+      --font-body:  'Inter', system-ui, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+    body { background: var(--ink); color: var(--white); font-family: var(--font-body); overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--ink); }
+    ::-webkit-scrollbar-thumb { background: var(--blood); border-radius: 2px; }
+
+    /* ── NAV (shared) ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 4rem;
+      background: rgba(13,13,13,0.92); backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(192,21,42,0.18);
+    }
+    .nav-logo {
+      font-family: var(--font-display); font-size: 1.5rem; font-weight: 900;
+      letter-spacing: -0.02em; color: var(--white); text-decoration: none;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .nav-logo .drop { color: var(--blood-bright); animation: pulse-drop 2s ease-in-out infinite; }
+    @keyframes pulse-drop {
+      0%,100% { filter: drop-shadow(0 0 4px var(--blood-bright)); }
+      50%      { filter: drop-shadow(0 0 14px var(--blood-bright)); }
+    }
+    .nav-links { display: flex; align-items: center; gap: 2rem; list-style: none; }
+    .nav-links a {
+      font-size: 0.78rem; font-weight: 500; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-light); text-decoration: none; transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--white); }
+    .nav-links a.active { color: var(--blood-bright); }
+    .nav-links .btn-nav-emergency {
+      background: var(--blood); color: var(--white) !important; padding: 0.45rem 1.1rem; border-radius: 2px;
+      transition: background 0.2s !important;
+    }
+    .nav-links .btn-nav-emergency:hover { background: var(--blood-bright) !important; }
+    .nav-links .btn-nav-auth {
+      border: 1px solid rgba(255,255,255,0.25); color: var(--white) !important; padding: 0.45rem 1.1rem; border-radius: 2px;
+    }
+    .nav-links .btn-nav-auth:hover { border-color: var(--white); }
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+    .hamburger span { display: block; width: 24px; height: 2px; background: var(--white); transition: 0.3s; }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      padding: 11rem 4rem 4rem; text-align: center;
+      background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(139,0,0,0.32) 0%, transparent 70%), var(--ink);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .hero-eyebrow {
+      font-family: var(--font-ui); font-size: 0.85rem; letter-spacing: 0.22em; color: var(--blood-bright);
+      margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; gap: 1rem;
+    }
+    .hero-eyebrow::before, .hero-eyebrow::after { content: ''; width: 50px; height: 1px; background: var(--blood); }
+    .page-header h1 {
+      font-family: var(--font-display); font-weight: 900; font-size: clamp(2.4rem, 6vw, 4.5rem);
+      line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 1rem;
+    }
+    .page-header h1 i { color: var(--blood-bright); font-size: 0.7em; vertical-align: middle; }
+    .page-header p { color: var(--text-muted); max-width: 560px; margin: 0 auto; font-weight: 300; line-height: 1.7; }
+
+    .section-label { font-family: var(--font-ui); font-size: 0.8rem; letter-spacing: 0.2em; color: var(--blood); margin-bottom: 0.9rem; }
+    .section-title { font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 900; line-height: 1.1; margin-bottom: 1.2rem; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.85rem 2rem;
+      font-family: var(--font-body); font-size: 0.82rem; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; text-decoration: none; border-radius: 2px; border: none; cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary { background: var(--blood); color: var(--white); box-shadow: 0 4px 24px rgba(192,21,42,0.4); }
+    .btn-primary:hover { background: var(--blood-bright); box-shadow: 0 8px 32px rgba(232,25,44,0.5); }
+    .btn-outline { background: transparent; color: var(--white); border: 1px solid rgba(255,255,255,0.35); }
+    .btn-outline:hover { border-color: var(--white); background: rgba(255,255,255,0.06); }
+    .btn-full { width: 100%; justify-content: center; }
+
+    /* ── EMERGENCY BANNER ── */
+    .emergency-contact { padding: 0 4rem; margin-top: -1px; }
+    .emergency-banner {
+      max-width: 1100px; margin: 0 auto; background: var(--blood-deep);
+      border-radius: 6px; padding: 2.2rem 2.5rem; margin-top: 3rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 2rem; flex-wrap: wrap;
+      position: relative; overflow: hidden;
+    }
+    .emergency-banner::before {
+      content: 'SOS'; position: absolute; right: -0.5rem; top: 50%; transform: translateY(-50%);
+      font-family: var(--font-ui); font-size: 5rem; letter-spacing: 0.1em; color: rgba(255,255,255,0.05); pointer-events: none;
+    }
+    .emergency-banner h2 { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.6rem; }
+    .emergency-banner p { font-size: 0.88rem; color: rgba(255,255,255,0.75); }
+    .btn-emergency-call { background: var(--white); color: var(--blood-deep); font-weight: 700; white-space: nowrap; }
+    .btn-emergency-call:hover { background: #f0e9e4; }
+
+    /* ── CONTACT SECTION ── */
+    .contact-section { padding: 6rem 4rem; background: var(--ink); }
+    .contact-wrapper { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 0.85fr 1.15fr; gap: 4rem; align-items: start; }
+
+    .contact-info h2 { font-family: var(--font-display); font-size: 1.8rem; font-weight: 700; margin-bottom: 1rem; }
+    .contact-info > p { font-size: 0.92rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 2.2rem; }
+    .contact-method {
+      display: flex; gap: 1.1rem; margin-bottom: 1.8rem;
+      background: var(--ash); border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; padding: 1.4rem;
+    }
+    .contact-method i { color: var(--blood-bright); font-size: 1.2rem; margin-top: 0.2rem; width: 22px; flex-shrink: 0; }
+    .contact-method h3 { font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .contact-method p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+
+    .contact-form-card { background: var(--ash); border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; padding: 2.8rem; }
+    .contact-form-card h2 { font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; margin-bottom: 2rem; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+    .form-group { display: flex; flex-direction: column; margin-bottom: 1.5rem; }
+    .form-row .form-group { margin-bottom: 0; }
+    .form-group label {
+      font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 0.6rem; font-weight: 500;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      background: var(--charcoal); border: 1px solid rgba(255,255,255,0.1); border-radius: 3px;
+      padding: 0.75rem 1rem; color: var(--white); font-family: var(--font-body); font-size: 0.92rem;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--blood-bright); }
+    .form-group input::placeholder, .form-group textarea::placeholder { color: #666; }
+    .form-group textarea { resize: vertical; font-family: var(--font-body); }
+    .form-group select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23999' d='M4 6l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; }
+
+    .checkbox-group { flex-direction: row; align-items: flex-start; gap: 0.7rem; }
+    .checkbox-label { display: flex; align-items: flex-start; gap: 0.7rem; font-size: 0.85rem; color: var(--text-light); cursor: pointer; line-height: 1.5; }
+    .checkbox-label input[type="checkbox"] { width: 17px; height: 17px; margin-top: 0.1rem; accent-color: var(--blood-bright); cursor: pointer; flex-shrink: 0; }
+    .checkbox-label a { color: var(--blood-bright); text-decoration: none; }
+    .checkbox-label a:hover { text-decoration: underline; }
+
+    .form-success {
+      display: none; margin-top: 1.2rem; background: rgba(40,200,64,0.1); border: 1px solid rgba(40,200,64,0.3);
+      border-radius: 4px; padding: 1rem 1.2rem; font-size: 0.88rem; color: var(--green);
+      align-items: center; gap: 0.7rem;
+    }
+    .form-success.visible { display: flex; animation: fadeUp 0.5s ease; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── FAQ ── */
+    .faq-section { padding: 7rem 4rem; background: var(--ash); border-top: 1px solid rgba(255,255,255,0.06); }
+    .faq-inner { max-width: 1100px; margin: 0 auto; }
+    .faq-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: rgba(255,255,255,0.06); margin-top: 3rem; }
+    .faq-item { background: var(--ash); padding: 2.2rem; transition: background 0.3s; }
+    .faq-item:hover { background: var(--charcoal); }
+    .faq-item h3 { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; margin-bottom: 0.7rem; display: flex; gap: 0.6rem; }
+    .faq-item h3::before { content: 'Q.'; color: var(--blood-bright); flex-shrink: 0; }
+    .faq-item p { font-size: 0.87rem; color: var(--text-muted); line-height: 1.7; }
+
+    /* ── MAP ── */
+    .map-section { padding: 7rem 4rem; background: var(--ink); }
+    .map-inner { max-width: 1100px; margin: 0 auto; text-align: center; }
+    .map-placeholder {
+      margin-top: 3rem; background: var(--ash); border: 1px solid rgba(255,255,255,0.06); border-radius: 6px;
+      padding: 5rem 2rem; display: flex; flex-direction: column; align-items: center; gap: 0.8rem;
+    }
+    .map-placeholder i { font-size: 2.8rem; color: var(--blood-bright); margin-bottom: 0.5rem; }
+    .map-placeholder p:nth-of-type(1) { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; }
+    .map-placeholder p:nth-of-type(2) { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1rem; }
+
+    /* ── FOOTER (shared) ── */
+    footer { background: var(--ink); border-top: 1px solid rgba(255,255,255,0.06); padding: 5rem 4rem 2rem; }
+    .footer-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr; gap: 4rem; margin-bottom: 4rem; }
+    .footer-brand .nav-logo { font-size: 1.8rem; margin-bottom: 1rem; }
+    .footer-brand p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.7; max-width: 260px; }
+    .footer-col h4 { font-family: var(--font-ui); font-size: 0.85rem; letter-spacing: 0.15em; color: var(--text-muted); margin-bottom: 1.5rem; }
+    .footer-col ul { list-style: none; }
+    .footer-col ul li { margin-bottom: 0.7rem; }
+    .footer-col ul a { font-size: 0.88rem; color: var(--text-light); text-decoration: none; transition: color 0.2s; }
+    .footer-col ul a:hover { color: var(--white); }
+    .footer-contact p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.7rem; display: flex; align-items: center; gap: 0.7rem; }
+    .footer-contact p i { color: var(--blood); }
+    .footer-bottom { max-width: 1100px; margin: 0 auto; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .footer-bottom p { font-size: 0.78rem; color: var(--text-muted); }
+
+    /* ── MOBILE ── */
+    @media (max-width: 900px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      .nav-links.open {
+        display: flex; flex-direction: column; position: fixed; inset: 0; background: var(--ink);
+        justify-content: center; align-items: center; gap: 2rem; z-index: 99;
+      }
+      .nav-links.open a { font-size: 1.2rem; }
+      .hamburger { display: flex; position: relative; z-index: 100; }
+      .page-header { padding: 9rem 1.5rem 3rem; }
+      .emergency-contact, .contact-section, .faq-section, .map-section { padding-left: 1.5rem; padding-right: 1.5rem; }
+      .emergency-banner { padding: 1.8rem; flex-direction: column; align-items: flex-start; text-align: left; }
+      .contact-wrapper { grid-template-columns: 1fr; gap: 2.5rem; }
+      .contact-form-card { padding: 2rem 1.5rem; }
+      .form-row { grid-template-columns: 1fr; }
+      .faq-grid { grid-template-columns: 1fr; }
+      .footer-inner { grid-template-columns: 1fr 1fr; gap: 2.5rem; }
+      .footer-bottom { flex-direction: column; gap: 1rem; text-align: center; }
+    }
+    @media (max-width: 540px) {
+      .footer-inner { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav id="mainNav">
+    <a href="index.html" class="nav-logo"><i class="fas fa-droplet drop"></i> BloodMate</a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="donor-registration.html">Donate</a></li>
+      <li><a href="recipient-request.html">Request</a></li>
+      <li><a href="blood-inventory.html">Inventory</a></li>
+      <li><a href="ai-eligibility.html">AI Eligibility</a></li>
+      <li><a href="contact.html" class="active">Contact</a></li>
+      <li><a href="database/emergency.html" class="btn-nav-emergency">🚨 Emergency</a></li>
+      <li><a href="auth.html" class="btn-nav-auth">Login</a></li>
+      <li><a href="admin/login.html" class="btn-nav-auth">Admin</a></li>
+    </ul>
+    <div class="hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+  </nav>
+
+  <!-- PAGE HEADER -->
+  <section class="page-header">
+    <div class="hero-eyebrow">WE'RE HERE TO HELP</div>
+    <h1><i class="fas fa-envelope"></i> Contact Us</h1>
+    <p>Get in touch with our team for any questions, support, or partnership inquiries.</p>
+  </section>
+
+  <!-- EMERGENCY BANNER -->
+  <section class="emergency-contact">
+    <div class="emergency-banner">
+      <div>
+        <h2><i class="fas fa-triangle-exclamation"></i> Emergency Blood Request</h2>
+        <p>For urgent requirements, call our 24/7 emergency helpline.</p>
+      </div>
+      <a href="tel:+911234567890" class="btn btn-emergency-call"><i class="fas fa-phone"></i> +91 123 456 7890</a>
+    </div>
+  </section>
+
+  <!-- CONTACT SECTION -->
+  <section class="contact-section">
+    <div class="contact-wrapper">
+
+      <div class="contact-info">
+        <h2>Get in Touch</h2>
+        <p>We're here to help you with any questions about blood donation, requests, or our services.</p>
+
+        <div class="contact-method">
+          <i class="fas fa-phone"></i>
+          <div>
+            <h3>Phone Support</h3>
+            <p>General Inquiries: +91 123 456 7890</p>
+            <p>Emergency Helpline: +91 123 456 7890</p>
+            <p>Available 24/7</p>
+          </div>
+        </div>
+
+        <div class="contact-method">
+          <i class="fas fa-envelope"></i>
+          <div>
+            <h3>Email Support</h3>
+            <p>General: info@bloodmate.com</p>
+            <p>Support: support@bloodmate.com</p>
+            <p>Emergency: emergency@bloodmate.com</p>
+          </div>
+        </div>
+
+        <div class="contact-method">
+          <i class="fas fa-map-marker-alt"></i>
+          <div>
+            <h3>Visit Us</h3>
+            <p>123 Healthcare Street</p>
+            <p>Medical City, State 123456</p>
+            <p>Mon–Fri: 9AM–6PM</p>
+          </div>
+        </div>
+
+        <div class="contact-method">
+          <i class="fas fa-clock"></i>
+          <div>
+            <h3>Operating Hours</h3>
+            <p>Emergency: 24/7</p>
+            <p>General Support: 9AM–6PM</p>
+            <p>Blood Bank: 8AM–8PM</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="contact-form-card">
+        <h2>Send Us a Message</h2>
+        <form id="contactForm" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="name">Full name *</label>
+              <input type="text" id="name" required placeholder="Your name" />
+            </div>
+            <div class="form-group">
+              <label for="email">Email address *</label>
+              <input type="email" id="email" required placeholder="you@example.com" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="phone">Phone number</label>
+              <input type="tel" id="phone" placeholder="+91 00000 00000" />
+            </div>
+            <div class="form-group">
+              <label for="subject">Subject *</label>
+              <select id="subject" required>
+                <option value="">Select subject</option>
+                <option value="General Inquiry">General Inquiry</option>
+                <option value="Donor Registration">Donor Registration</option>
+                <option value="Blood Request">Blood Request</option>
+                <option value="Technical Support">Technical Support</option>
+                <option value="Partnership">Partnership Inquiry</option>
+                <option value="Complaint">Complaint</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="message">Message *</label>
+            <textarea id="message" rows="6" placeholder="Please describe your inquiry in detail..." required></textarea>
+          </div>
+
+          <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="newsletter" />
+              Subscribe to our newsletter for blood donation updates and health tips.
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full"><i class="fas fa-paper-plane"></i> Send Message</button>
+
+          <div class="form-success" id="formSuccess">
+            <i class="fas fa-circle-check"></i>
+            <span>Message sent. We'll get back to you within 24 hours.</span>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq-section">
+    <div class="faq-inner">
+      <div class="section-label">Common Questions</div>
+      <h2 class="section-title">Frequently Asked Questions</h2>
+      <div class="faq-grid">
+        <div class="faq-item">
+          <h3>How often can I donate blood?</h3>
+          <p>You can donate whole blood every 56 days (8 weeks). Platelet donations can be made every 7 days, up to 24 times per year.</p>
+        </div>
+        <div class="faq-item">
+          <h3>What are the eligibility criteria?</h3>
+          <p>You must be 18–65 years old, weigh at least 50kg, have a hemoglobin level of 12.5g/dl or higher, and be in good health.</p>
+        </div>
+        <div class="faq-item">
+          <h3>How long does donation take?</h3>
+          <p>The entire process takes about 45–60 minutes, including registration, health screening, donation (8–10 minutes), and recovery time.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Is blood donation safe?</h3>
+          <p>Yes, blood donation is completely safe. We use sterile, single-use equipment and follow strict safety protocols.</p>
+        </div>
+        <div class="faq-item">
+          <h3>How do I request blood urgently?</h3>
+          <p>Call our 24/7 emergency helpline at +91 123 456 7890 or fill out the urgent blood request form on our website.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Can I specify where my blood goes?</h3>
+          <p>While you cannot specify individual recipients, you can indicate preferences for local hospitals or emergency reserves.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAP -->
+  <section class="map-section">
+    <div class="map-inner">
+      <div class="section-label">Visit In Person</div>
+      <h2 class="section-title">Find Us</h2>
+      <div class="map-placeholder">
+        <i class="fas fa-map-marked-alt"></i>
+        <p>Interactive Map</p>
+        <p>123 Healthcare Street, Medical City</p>
+        <a href="#" class="btn btn-outline">Get Directions</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-logo"><i class="fas fa-droplet drop"></i> BloodMate</a>
+        <p>Connecting hearts and saving lives through smarter blood donation management.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Donors</h4>
+        <ul>
+          <li><a href="donor-registration.html">Register</a></li>
+          <li><a href="ai-eligibility.html">Eligibility Check</a></li>
+          <li><a href="blood-inventory.html">Inventory</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Recipients</h4>
+        <ul>
+          <li><a href="recipient-request.html">Request Blood</a></li>
+          <li><a href="database/emergency.html">Emergency</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-contact">
+        <h4>Contact</h4>
+        <p><i class="fas fa-phone"></i> +91 123 456 7890</p>
+        <p><i class="fas fa-envelope"></i> info@bloodmate.com</p>
+        <p><i class="fas fa-location-dot"></i> 123 Healthcare Street, Medical City</p>
+        <div style="margin-top:1.5rem;">
+          <a href="admin/login.html" class="btn btn-outline" style="font-size:0.72rem;padding:0.5rem 1rem;">Admin Panel →</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 BloodMate. All rights reserved.</p>
+      <p style="color:var(--blood);font-family:var(--font-display);font-style:italic;">Save Lives. Donate Blood.</p>
+    </div>
+  </footer>
+
+  <script>
+    function toggleMenu() { document.getElementById('navLinks').classList.toggle('open'); }
+
+    document.getElementById('contactForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      document.getElementById('formSuccess').classList.add('visible');
+      this.reset();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Messages — BloodMate Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="admin-shared.css" />
+  <style>
+    .msg-layout { display: grid; grid-template-columns: 320px 1fr; gap: 1rem; height: calc(100vh - 180px); }
+    .msg-list-panel { background: var(--ash); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; display: flex; flex-direction: column; }
+    .msg-list-head { padding: 1rem 1.2rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .msg-list-head h3 { font-size: 0.82rem; font-weight: 600; }
+    .msg-search { padding: 0.8rem 1rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .msg-items { overflow-y: auto; flex: 1; }
+    .msg-item { padding: 1rem 1.2rem; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.2s; display: flex; gap: 0.8rem; align-items: flex-start; }
+    .msg-item:hover { background: rgba(255,255,255,0.03); }
+    .msg-item.active { background: rgba(192,21,42,0.1); border-left: 2px solid var(--blood-bright); }
+    .msg-item.unread .msg-sender { color: var(--white); font-weight: 600; }
+    .msg-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--charcoal); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); flex-shrink: 0; }
+    .msg-item.unread .msg-avatar { background: rgba(192,21,42,0.15); border-color: rgba(192,21,42,0.3); color: var(--blood-bright); }
+    .msg-meta { flex: 1; min-width: 0; }
+    .msg-sender { font-size: 0.83rem; color: var(--text-muted); margin-bottom: 0.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .msg-subj { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .msg-time { font-size: 0.66rem; color: var(--text-muted); white-space: nowrap; }
+    .unread-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blood-bright); flex-shrink: 0; margin-top: 4px; }
+
+    /* DETAIL */
+    .msg-detail-panel { background: var(--ash); border: 1px solid var(--border); border-radius: 4px; display: flex; flex-direction: column; overflow: hidden; }
+    .msg-detail-head { padding: 1.2rem 1.6rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .msg-detail-subject { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .msg-detail-meta { display: flex; gap: 1.5rem; font-size: 0.78rem; color: var(--text-muted); }
+    .msg-detail-body { padding: 1.6rem; flex: 1; overflow-y: auto; font-size: 0.88rem; color: var(--text-light); line-height: 1.8; font-weight: 300; }
+    .msg-reply-box { padding: 1.2rem 1.6rem; border-top: 1px solid var(--border); flex-shrink: 0; }
+    .msg-reply-row { display: flex; gap: 0.8rem; }
+    .msg-reply-input { flex: 1; background: var(--charcoal); border: 1px solid var(--border); border-radius: 3px; padding: 0.75rem 1rem; font-family: var(--font-body); font-size: 0.84rem; color: var(--white); outline: none; transition: border-color 0.2s; }
+    .msg-reply-input:focus { border-color: var(--blood); }
+    .msg-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); gap: 0.8rem; }
+    .msg-empty i { font-size: 2.5rem; color: rgba(192,21,42,0.25); }
+    @media(max-width:768px){ .msg-layout{grid-template-columns:1fr;height:auto;} .msg-list-panel{height:350px;} }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><a href="../index.html" class="brand-logo"><i class="fas fa-droplet drop"></i> BloodMate</a></div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-label">Main</div>
+    <a href="dashboard.html"><i class="fas fa-gauge-high"></i> Dashboard</a>
+    <a href="donors.html"><i class="fas fa-users"></i> Donors</a>
+    <a href="requests.html"><i class="fas fa-hand-holding-medical"></i> Blood Requests</a>
+    <a href="inventory.html"><i class="fas fa-warehouse"></i> Inventory</a>
+    <div class="sidebar-label">Communication</div>
+    <a href="messages.html" class="active"><i class="fas fa-envelope"></i> Messages</a>
+    <a href="reports.html"><i class="fas fa-chart-bar"></i> Reports</a>
+    <div class="sidebar-label">System</div>
+    <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+  </nav>
+  <div class="sidebar-footer"><a href="../index.html" class="logout-btn" onclick="logout()"><i class="fas fa-arrow-right-from-bracket"></i> Logout</a></div>
+</aside>
+
+<div class="admin-main">
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <button class="hamburger-btn" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+      <h1 class="topbar-title">Messages <span>Inbox</span></h1>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-pill"><div class="status-dot"></div><span>System Live</span></div>
+      <div class="topbar-avatar"><i class="fas fa-user"></i></div>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="page-header">
+      <div class="page-header-left">
+        <h2>All <em>Messages</em></h2>
+        <p id="unreadCount">4 unread messages</p>
+      </div>
+      <div style="display:flex;gap:0.6rem">
+        <button class="btn btn-ghost btn-sm" onclick="markAllRead()"><i class="fas fa-check-double"></i> Mark All Read</button>
+        <button class="btn btn-primary btn-sm" onclick="openModal('composeModal')"><i class="fas fa-pen"></i> Compose</button>
+      </div>
+    </div>
+
+    <div class="msg-layout">
+      <!-- LIST -->
+      <div class="msg-list-panel">
+        <div class="msg-list-head">
+          <h3><i class="fas fa-inbox" style="color:var(--blood)"></i>&nbsp; Inbox</h3>
+          <span class="badge badge-critical" id="unreadBadge">4 unread</span>
+        </div>
+        <div class="msg-search">
+          <div class="search-wrap" style="min-width:unset"><i class="fas fa-search"></i><input class="search-input" type="text" placeholder="Search messages…" oninput="searchMessages(this.value)" /></div>
+        </div>
+        <div class="msg-items" id="msgList"></div>
+      </div>
+
+      <!-- DETAIL -->
+      <div class="msg-detail-panel" id="msgDetail">
+        <div class="msg-empty">
+          <i class="fas fa-envelope-open-text"></i>
+          <p>Select a message to read</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPOSE MODAL -->
+<div class="modal-overlay" id="composeModal">
+  <div class="modal-box wide">
+    <div class="modal-head"><h3>Compose Message</h3><button class="modal-close" onclick="closeModal('composeModal')"><i class="fas fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">To (Email)</label><input class="form-input" type="email" placeholder="recipient@email.com" /></div>
+      <div class="form-group"><label class="form-label">Subject</label><input class="form-input" type="text" placeholder="Subject" /></div>
+      <div class="form-group"><label class="form-label">Message</label><textarea class="form-textarea" style="min-height:150px" placeholder="Write your message…"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeModal('composeModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="sendMsg()"><i class="fas fa-paper-plane"></i> Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const messages = [
+  { id:1, name:'Ravi Kumar',     email:'ravi@example.com',         subject:'Emergency O- request',       body:'Hello Admin,\n\nI need O- blood urgently for my mother who is scheduled for emergency surgery tomorrow morning at Civil Hospital, Ahmedabad. Please help us find a donor as soon as possible. Time is critical.\n\nThank you,\nRavi Kumar', time:'10m ago', unread:true, tag:'Urgent' },
+  { id:2, name:'Sunita Patel',   email:'sunita@example.com',        subject:'Thank you for your help!',   body:'Dear BloodMate Team,\n\nI just wanted to say a heartfelt thank you. You connected us with a donor within hours for my husband\'s surgery. He is recovering well now. You truly saved his life.\n\nWith gratitude,\nSunita Patel', time:'1h ago',  unread:true, tag:null },
+  { id:3, name:'Amit Joshi',     email:'amit@example.com',          subject:'Next donation schedule',     body:'Hi,\n\nI donated blood last time about 3 months ago and I\'d like to donate again. Could you please let me know when and where the next donation camp is scheduled? I have B+ blood type.\n\nRegards,\nAmit Joshi', time:'3h ago',  unread:true, tag:null },
+  { id:4, name:'Dr. Mehta',      email:'dr.mehta@hospital.com',     subject:'AB+ units needed urgently',  body:'Dear Admin,\n\nWe have a scheduled surgery for tomorrow and need 5 units of AB+ blood by 8 AM. Please confirm availability and arrange delivery to Fortis Hospital, Ahmedabad at the earliest.\n\nDr. Mehta\nFortis Hospital', time:'5h ago',  unread:true, tag:'Critical' },
+  { id:5, name:'Pooja Sharma',   email:'pooja@example.com',         subject:'Donor registration query',   body:'Hello,\n\nI want to register as a blood donor but I\'m not sure if I\'m eligible. I had a minor surgery 6 months ago. Am I able to donate now?\n\nPooja Sharma', time:'Yesterday', unread:false, tag:null },
+  { id:6, name:'Nikhil Verma',   email:'nikhil@example.com',        subject:'Blood camp in Vadodara',     body:'Hi Team,\n\nIs there a blood donation camp planned in Vadodara next month? I would like to organize one at my company. We have around 80 employees who have shown interest.\n\nNikhil Verma', time:'2 days ago', unread:false, tag:null },
+];
+
+let selectedId = null;
+
+function renderList(list) {
+  const el = document.getElementById('msgList');
+  el.innerHTML = '';
+  list.forEach(m => {
+    const initials = m.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    el.innerHTML += `<div class="msg-item ${m.unread?'unread':''} ${selectedId===m.id?'active':''}" onclick="openMessage(${m.id})">
+      <div class="msg-avatar">${initials}</div>
+      <div class="msg-meta">
+        <div class="msg-sender">${m.name}${m.tag?` <span class="badge badge-${m.tag==='Critical'?'critical':'urgent'}" style="font-size:0.55rem">${m.tag}</span>`:''}</div>
+        <div class="msg-subj">${m.subject}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.4rem">
+        <div class="msg-time">${m.time}</div>
+        ${m.unread?'<div class="unread-dot"></div>':''}
+      </div>
+    </div>`;
+  });
+}
+
+function openMessage(id) {
+  selectedId = id;
+  const m = messages.find(x => x.id===id);
+  m.unread = false;
+  updateUnreadBadge();
+  renderList(messages);
+
+  const initials = m.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('msgDetail').innerHTML = `
+    <div class="msg-detail-head">
+      <div class="msg-detail-subject">${m.subject}</div>
+      <div class="msg-detail-meta">
+        <span><i class="fas fa-user" style="color:var(--blood)"></i>&nbsp;${m.name}</span>
+        <span><i class="fas fa-envelope" style="color:var(--blood)"></i>&nbsp;${m.email}</span>
+        <span><i class="fas fa-clock" style="color:var(--blood)"></i>&nbsp;${m.time}</span>
+        ${m.tag?`<span class="badge badge-${m.tag==='Critical'?'critical':'urgent'}">${m.tag}</span>`:''}
+      </div>
+    </div>
+    <div class="msg-detail-body">${m.body.replace(/\n/g,'<br/>')}</div>
+    <div class="msg-reply-box">
+      <div class="msg-reply-row">
+        <input class="msg-reply-input" type="text" placeholder="Type your reply to ${m.name}…" id="replyInput" />
+        <button class="btn btn-primary" onclick="sendReply(${m.id})"><i class="fas fa-paper-plane"></i> Reply</button>
+        <button class="btn btn-danger" onclick="deleteMessage(${m.id})"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>`;
+}
+
+function sendReply(id) {
+  const val = document.getElementById('replyInput').value.trim();
+  if (!val) return;
+  showToast('Reply sent successfully','success');
+  document.getElementById('replyInput').value = '';
+}
+
+function deleteMessage(id) {
+  const idx = messages.findIndex(x=>x.id===id);
+  if (idx > -1) messages.splice(idx,1);
+  selectedId = null;
+  document.getElementById('msgDetail').innerHTML = `<div class="msg-empty"><i class="fas fa-envelope-open-text"></i><p>Select a message to read</p></div>`;
+  renderList(messages);
+  updateUnreadBadge();
+  showToast('Message deleted','error');
+}
+
+function markAllRead() {
+  messages.forEach(m => m.unread = false);
+  renderList(messages);
+  updateUnreadBadge();
+  showToast('All messages marked as read','success');
+}
+
+function updateUnreadBadge() {
+  const count = messages.filter(m=>m.unread).length;
+  document.getElementById('unreadBadge').textContent = `${count} unread`;
+  document.getElementById('unreadCount').textContent = `${count} unread message${count!==1?'s':''}`;
+}
+
+function searchMessages(q) {
+  const res = messages.filter(m => m.name.toLowerCase().includes(q.toLowerCase()) || m.subject.toLowerCase().includes(q.toLowerCase()));
+  renderList(res);
+}
+
+function sendMsg() { showToast('Message sent','success'); closeModal('composeModal'); }
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(el => el.addEventListener('click', e => { if(e.target===el) el.classList.remove('open'); }));
+function showToast(msg,type) { const n=document.createElement('div'); n.innerHTML=`<i class="fas fa-${type==='success'?'check-circle':'circle-exclamation'}"></i> ${msg}`; Object.assign(n.style,{position:'fixed',top:'1.5rem',right:'1.5rem',padding:'0.85rem 1.3rem',background:type==='success'?'#16a34a':'#C0152A',color:'#fff',fontFamily:'Inter,sans-serif',fontSize:'0.84rem',fontWeight:'500',borderRadius:'4px',zIndex:'9999',display:'flex',alignItems:'center',gap:'0.5rem',boxShadow:'0 8px 24px rgba(0,0,0,0.35)'}); document.body.appendChild(n); setTimeout(()=>n.remove(),3000); }
+function logout() { localStorage.removeItem('admin_token'); localStorage.removeItem('admin_user'); window.location.href='login.html'; }
+
+renderList(messages);
+</script>
+</body>
+</html>

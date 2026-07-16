@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emergency — BloodMate</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blood:#C0152A; --blood-deep:#8B0000; --blood-bright:#E8192C;
+      --ink:#0D0D0D; --ash:#1A1A1A; --charcoal:#242424;
+      --border:rgba(255,255,255,0.07); --text-muted:#888; --text-light:#CCCCCC; --white:#FFFFFF;
+      --green:#22c55e; --orange:#fb923c; --yellow:#facc15;
+      --font-display:'Playfair Display',Georgia,serif;
+      --font-ui:'Bebas Neue',sans-serif;
+      --font-body:'Inter',system-ui,sans-serif;
+      --nav-h:68px;
+    }
+    html,body{height:100%;}
+    body{background:var(--ink);color:var(--white);font-family:var(--font-body);}
+    ::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--ink);} ::-webkit-scrollbar-thumb{background:var(--blood);border-radius:2px;}
+
+    /* NAV */
+    .navbar{position:sticky;top:0;z-index:100;background:var(--ash);border-bottom:1px solid var(--border);height:var(--nav-h);}
+    .nav-inner{max-width:1280px;margin:0 auto;padding:0 2rem;height:100%;display:flex;align-items:center;justify-content:space-between;}
+    .brand{font-family:var(--font-display);font-size:1.3rem;font-weight:900;color:var(--white);text-decoration:none;display:flex;align-items:center;gap:.5rem;}
+    .brand .drop{color:var(--blood-bright);animation:pulse-drop 2s ease-in-out infinite;}
+    @keyframes pulse-drop{0%,100%{filter:drop-shadow(0 0 4px var(--blood-bright))}50%{filter:drop-shadow(0 0 14px var(--blood-bright))}}
+    .nav-links{display:flex;align-items:center;gap:.2rem;list-style:none;}
+    .nav-links a{font-size:.8rem;font-weight:500;color:var(--text-muted);text-decoration:none;padding:.45rem .85rem;border-radius:3px;transition:color .2s,background .2s;}
+    .nav-links a:hover{color:var(--white);background:rgba(255,255,255,.04);}
+    .nav-links a.active{color:var(--white);}
+    .nav-links a.nav-hl{background:rgba(192,21,42,.15);color:var(--blood-bright);border:1px solid rgba(192,21,42,.25);}
+    .nav-links a.nav-hl:hover{background:rgba(192,21,42,.25);}
+    .hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px;}
+    .hamburger span{width:22px;height:2px;background:var(--white);border-radius:1px;}
+    .container{max-width:1200px;margin:0 auto;padding:0 2rem;}
+
+    /* EMERGENCY HERO */
+    .emrg-hero{
+      min-height:380px; display:flex; align-items:center;
+      position:relative; overflow:hidden;
+      border-bottom:1px solid var(--border);
+      padding:3rem 0;
+    }
+    .emrg-hero::before{
+      content:''; position:absolute; inset:0;
+      background:radial-gradient(ellipse at 30% 50%, rgba(192,21,42,.22) 0%, transparent 65%);
+    }
+    .emrg-hero .pulse-ring{
+      position:absolute; right:-80px; top:50%; transform:translateY(-50%);
+      width:500px; height:500px; border-radius:50%;
+      border:1px solid rgba(192,21,42,.15);
+      animation:ring-out 3s ease-out infinite;
+    }
+    .emrg-hero .pulse-ring:nth-child(2){animation-delay:.8s; border-color:rgba(192,21,42,.1);}
+    .emrg-hero .pulse-ring:nth-child(3){animation-delay:1.6s; border-color:rgba(192,21,42,.06);}
+    @keyframes ring-out{0%{transform:translateY(-50%) scale(.6);opacity:1}100%{transform:translateY(-50%) scale(1.4);opacity:0}}
+    .emrg-hero-inner{position:relative;z-index:2;}
+    .emrg-eyebrow{font-family:var(--font-ui);font-size:.7rem;letter-spacing:.2em;color:var(--blood-bright);text-transform:uppercase;margin-bottom:.7rem;}
+    .emrg-hero h1{font-family:var(--font-display);font-size:clamp(2.2rem,5vw,3.4rem);font-weight:900;line-height:1.1;margin-bottom:1rem;}
+    .emrg-hero h1 em{color:var(--blood-bright);font-style:italic;}
+    .emrg-hero p{font-size:.98rem;color:var(--text-light);max-width:520px;line-height:1.65;margin-bottom:2rem;}
+    .emrg-cta-row{display:flex;gap:1rem;flex-wrap:wrap;align-items:center;}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.72rem 1.6rem;border-radius:3px;cursor:pointer;font-family:var(--font-body);font-size:.82rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border:none;transition:all .2s;text-decoration:none;}
+    .btn-emergency{background:var(--blood-bright);color:var(--white);box-shadow:0 0 24px rgba(232,25,44,.4);}
+    .btn-emergency:hover{background:var(--blood);box-shadow:0 0 32px rgba(232,25,44,.6);transform:translateY(-1px);}
+    .btn-outline{background:transparent;color:var(--text-light);border:1px solid var(--border);}
+    .btn-outline:hover{border-color:var(--blood);color:var(--blood-bright);background:rgba(192,21,42,.06);}
+    .btn-primary{background:var(--blood);color:var(--white);}
+    .btn-primary:hover{background:var(--blood-bright);transform:translateY(-1px);}
+    .phone-badge{display:flex;align-items:center;gap:.6rem;font-size:.78rem;color:var(--text-muted);}
+    .phone-badge strong{color:var(--white);font-size:1.1rem;}
+
+    /* STATS ROW */
+    .emrg-stats{padding:2.5rem 0;border-bottom:1px solid var(--border);}
+    .stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:4px;overflow:hidden;}
+    .stat-cell{background:var(--ash);padding:1.6rem 1.8rem;text-align:center;}
+    .stat-cell-val{font-family:var(--font-display);font-size:2.2rem;font-weight:900;color:var(--blood-bright);line-height:1;}
+    .stat-cell-lbl{font-size:.72rem;color:var(--text-muted);margin-top:.3rem;font-family:var(--font-ui);letter-spacing:.1em;text-transform:uppercase;}
+
+    /* URGENT REQUESTS */
+    .urgent-section{padding:3.5rem 0;border-bottom:1px solid var(--border);}
+    .sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.6rem;}
+    .sec-head h2{font-family:var(--font-display);font-size:1.5rem;font-weight:900;}
+    .sec-head h2 i{color:var(--blood-bright);margin-right:.4rem;}
+    .blink-dot{width:8px;height:8px;border-radius:50%;background:var(--blood-bright);box-shadow:0 0 8px var(--blood-bright);animation:blink 1.5s ease-in-out infinite;display:inline-block;margin-right:.5rem;}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+    .urgent-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;}
+    .urgent-card{background:var(--ash);border:1px solid var(--border);border-radius:4px;padding:1.4rem 1.6rem;position:relative;overflow:hidden;transition:border-color .25s,transform .25s;}
+    .urgent-card:hover{border-color:rgba(192,21,42,.35);transform:translateY(-2px);}
+    .urgent-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--blood-bright);}
+    .urgent-card.ok::before{background:var(--green);}
+    .urgent-card.warn::before{background:var(--orange);}
+    .uc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem;}
+    .uc-type{font-family:var(--font-display);font-size:1.5rem;font-weight:900;color:var(--blood-bright);}
+    .badge{display:inline-block;padding:.2rem .55rem;border-radius:2px;font-size:.65rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;}
+    .badge-critical{background:rgba(232,25,44,.18);color:var(--blood-bright);border:1px solid rgba(232,25,44,.3);}
+    .badge-urgent{background:rgba(251,146,60,.18);color:#fb923c;border:1px solid rgba(251,146,60,.3);}
+    .badge-ok{background:rgba(34,197,94,.12);color:#22c55e;border:1px solid rgba(34,197,94,.25);}
+    .uc-patient{font-size:.82rem;color:var(--white);font-weight:500;margin-bottom:.2rem;}
+    .uc-hospital{font-size:.75rem;color:var(--text-muted);}
+    .uc-foot{display:flex;align-items:center;justify-content:space-between;margin-top:1rem;padding-top:.8rem;border-top:1px solid var(--border);}
+    .uc-units{font-size:.72rem;color:var(--text-muted);}
+    .uc-units strong{color:var(--white);}
+    .tbl-btn{font-size:.68rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:.25rem .7rem;border-radius:2px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-muted);transition:.2s;}
+    .tbl-btn:hover{border-color:var(--blood);color:var(--blood-bright);}
+
+    /* BLOOD TYPE AVAILABILITY */
+    .avail-section{padding:3.5rem 0;border-bottom:1px solid var(--border);}
+    .avail-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;}
+    .avail-card{background:var(--ash);border:1px solid var(--border);border-radius:4px;padding:1.4rem;text-align:center;transition:border-color .25s,transform .25s;}
+    .avail-card:hover{border-color:rgba(192,21,42,.3);transform:translateY(-2px);}
+    .avail-type{font-family:var(--font-display);font-size:2rem;font-weight:900;color:var(--blood-bright);margin-bottom:.3rem;}
+    .avail-units{font-size:.8rem;color:var(--text-muted);margin-bottom:.8rem;}
+    .avail-bar-bg{height:4px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;margin-bottom:.7rem;}
+    .avail-bar{height:100%;border-radius:2px;transition:width 1.2s cubic-bezier(.4,0,.2,1);}
+    .avail-bar.low{background:var(--blood-bright);}
+    .avail-bar.mid{background:var(--orange);}
+    .avail-bar.ok{background:var(--green);}
+    .avail-status{font-size:.68rem;font-family:var(--font-ui);letter-spacing:.1em;text-transform:uppercase;}
+
+    /* HOW TO GET HELP */
+    .help-section{padding:3.5rem 0;border-bottom:1px solid var(--border);}
+    .help-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;}
+    .help-card{background:var(--ash);border:1px solid var(--border);border-radius:4px;padding:1.8rem;}
+    .help-icon{width:44px;height:44px;background:rgba(192,21,42,.12);border:1px solid rgba(192,21,42,.2);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--blood-bright);margin-bottom:1.1rem;}
+    .help-card h3{font-size:.9rem;font-weight:600;margin-bottom:.5rem;}
+    .help-card p{font-size:.8rem;color:var(--text-muted);line-height:1.6;}
+    .help-card a{display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--blood-bright);text-decoration:none;margin-top:.8rem;font-weight:500;}
+    .help-card a:hover{text-decoration:underline;}
+
+    /* CENTERS */
+    .centers-section{padding:3.5rem 0;}
+    .centers-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;}
+    .center-card{background:var(--ash);border:1px solid var(--border);border-radius:4px;padding:1.6rem;}
+    .center-card h3{font-size:.9rem;font-weight:600;margin-bottom:1rem;}
+    .center-card p{font-size:.8rem;color:var(--text-muted);display:flex;align-items:flex-start;gap:.5rem;margin-bottom:.45rem;line-height:1.4;}
+    .center-card p i{color:var(--blood);margin-top:2px;flex-shrink:0;width:14px;}
+    .center-card .btn{margin-top:1rem;width:100%;}
+
+    /* FOOTER */
+    .site-footer{background:var(--ash);border-top:1px solid var(--border);padding:3rem 0 1.5rem;}
+    .footer-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:3rem;margin-bottom:2.5rem;}
+    .footer-brand{font-family:var(--font-display);font-size:1.15rem;font-weight:900;display:flex;align-items:center;gap:.5rem;margin-bottom:.7rem;}
+    .footer-brand .drop{color:var(--blood-bright);}
+    .footer-about{font-size:.82rem;color:var(--text-muted);line-height:1.6;}
+    .footer-col h4{font-family:var(--font-ui);font-size:.72rem;letter-spacing:.18em;color:var(--text-muted);text-transform:uppercase;margin-bottom:1rem;}
+    .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:.5rem;}
+    .footer-col ul li a{font-size:.82rem;color:var(--text-muted);text-decoration:none;transition:color .2s;}
+    .footer-col ul li a:hover{color:var(--white);}
+    .footer-col p{font-size:.82rem;color:var(--text-muted);display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem;}
+    .footer-col p i{color:var(--blood);width:14px;}
+    .footer-bottom{border-top:1px solid var(--border);padding-top:1.2rem;font-size:.75rem;color:var(--text-muted);text-align:center;}
+
+    @media(max-width:900px){.urgent-grid{grid-template-columns:1fr 1fr;}.avail-grid{grid-template-columns:repeat(4,1fr);}.help-grid{grid-template-columns:1fr 1fr;}.centers-grid{grid-template-columns:1fr 1fr;}.footer-grid{grid-template-columns:1fr 1fr;}}
+    @media(max-width:640px){.nav-links{display:none;}.hamburger{display:flex;}.stats-bar{grid-template-columns:1fr 1fr;}.urgent-grid{grid-template-columns:1fr;}.avail-grid{grid-template-columns:repeat(2,1fr);}.help-grid{grid-template-columns:1fr;}.centers-grid{grid-template-columns:1fr;}.footer-grid{grid-template-columns:1fr;}.container{padding:0 1.2rem;}.emrg-hero{min-height:auto;padding:2.5rem 0;}}
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a href="../index.html" class="brand"><i class="fas fa-droplet drop"></i> BloodMate</a>
+      <ul class="nav-links">
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../donor-registration.html">Become a Donor</a></li>
+        <li><a href="../recipient-request.html">Request Blood</a></li>
+        <li><a href="../blood-inventory.html">Blood Inventory</a></li>
+        <li><a href="../contact.html">Contact</a></li>
+        <li><a href="emergency.html" class="nav-hl active">Emergency</a></li>
+        <li><a href="../ai-eligibility.html" class="nav-hl">AI Eligibility</a></li>
+        <li><a href="../admin/login.html" class="nav-hl">Admin</a></li>
+      </ul>
+      <button class="hamburger" onclick="this.classList.toggle('open')"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="emrg-hero">
+    <div class="pulse-ring"></div>
+    <div class="pulse-ring"></div>
+    <div class="pulse-ring"></div>
+    <div class="container">
+      <div class="emrg-hero-inner">
+        <div class="emrg-eyebrow"><i class="fas fa-triangle-exclamation"></i> &nbsp;24 / 7 Emergency Response</div>
+        <h1>Every Second<br><em>Counts.</em></h1>
+        <p>Critical blood shortage can be life-threatening. Our emergency response team is on standby around the clock — call immediately or submit an urgent request below.</p>
+        <div class="emrg-cta-row">
+          <a href="tel:+911234567890" class="btn btn-emergency"><i class="fas fa-phone"></i> Call Emergency Line</a>
+          <a href="../recipient-request.html" class="btn btn-outline"><i class="fas fa-hand-holding-medical"></i> Submit Urgent Request</a>
+        </div>
+        <div class="phone-badge" style="margin-top:1.2rem;">
+          <i class="fas fa-phone" style="color:var(--blood)"></i>
+          <span>Emergency Helpline:</span>
+          <strong>+91 123 456 7890</strong>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div class="emrg-stats">
+    <div class="container">
+      <div class="stats-bar">
+        <div class="stat-cell"><div class="stat-cell-val" id="cntActive">23</div><div class="stat-cell-lbl">Active Emergencies</div></div>
+        <div class="stat-cell"><div class="stat-cell-val" id="cntMin">8</div><div class="stat-cell-lbl">Avg. Response (min)</div></div>
+        <div class="stat-cell"><div class="stat-cell-val" id="cntDonors">340</div><div class="stat-cell-lbl">On-Call Donors</div></div>
+        <div class="stat-cell"><div class="stat-cell-val" id="cntSaved">1,200+</div><div class="stat-cell-lbl">Lives Saved This Year</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- URGENT REQUESTS -->
+  <section class="urgent-section">
+    <div class="container">
+      <div class="sec-head">
+        <h2><i class="fas fa-bolt"></i> Active Emergency Requests</h2>
+        <span style="font-size:.75rem;color:var(--text-muted);display:flex;align-items:center;"><span class="blink-dot"></span> Live</span>
+      </div>
+      <div class="urgent-grid" id="urgentGrid"></div>
+    </div>
+  </section>
+
+  <!-- BLOOD AVAILABILITY -->
+  <section class="avail-section">
+    <div class="container">
+      <div class="sec-head">
+        <h2><i class="fas fa-droplet"></i> Emergency Blood Availability</h2>
+        <a href="../blood-inventory.html" class="btn btn-outline" style="font-size:.72rem;padding:.4rem 1rem;">Full Inventory →</a>
+      </div>
+      <div class="avail-grid" id="availGrid"></div>
+    </div>
+  </section>
+
+  <!-- HOW TO GET HELP -->
+  <section class="help-section">
+    <div class="container">
+      <div class="sec-head"><h2><i class="fas fa-circle-question"></i> How to Get Emergency Help</h2></div>
+      <div class="help-grid">
+        <div class="help-card">
+          <div class="help-icon"><i class="fas fa-phone"></i></div>
+          <h3>Call Our Helpline</h3>
+          <p>Our 24/7 emergency operators will assess the situation, check stock availability, and dispatch a response immediately.</p>
+          <a href="tel:+911234567890"><i class="fas fa-arrow-right"></i> +91 123 456 7890</a>
+        </div>
+        <div class="help-card">
+          <div class="help-icon"><i class="fas fa-file-medical"></i></div>
+          <h3>Submit an Urgent Request</h3>
+          <p>Fill out our priority blood request form online. Critical cases are flagged and reviewed within minutes by our coordination team.</p>
+          <a href="../recipient-request.html"><i class="fas fa-arrow-right"></i> Go to Request Form</a>
+        </div>
+        <div class="help-card">
+          <div class="help-icon"><i class="fas fa-hospital"></i></div>
+          <h3>Visit a Center Directly</h3>
+          <p>All three of our partner hospitals maintain emergency reserves. Walk in any time — no appointment needed for emergencies.</p>
+          <a href="#centers"><i class="fas fa-arrow-right"></i> See Locations Below</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CENTERS -->
+  <section class="centers-section" id="centers">
+    <div class="container">
+      <div class="sec-head"><h2><i class="fas fa-map-pin"></i> Emergency Donation Centers</h2></div>
+      <div class="centers-grid">
+        <div class="center-card">
+          <h3>City General Hospital</h3>
+          <p><i class="fas fa-map-marker-alt"></i> 123 Main Street, Medical District</p>
+          <p><i class="fas fa-clock"></i> Open 24 / 7</p>
+          <p><i class="fas fa-phone"></i> +91 123 456 7890</p>
+          <p><i class="fas fa-droplet"></i> All blood types in stock</p>
+          <a href="#" class="btn btn-outline"><i class="fas fa-location-arrow"></i> Get Directions</a>
+        </div>
+        <div class="center-card">
+          <h3>Regional Blood Bank</h3>
+          <p><i class="fas fa-map-marker-alt"></i> 456 Healthcare Avenue</p>
+          <p><i class="fas fa-clock"></i> Mon–Sat: 8 AM – 6 PM</p>
+          <p><i class="fas fa-phone"></i> +91 123 456 7891</p>
+          <p><i class="fas fa-droplet"></i> Emergency after-hours line available</p>
+          <a href="#" class="btn btn-outline"><i class="fas fa-location-arrow"></i> Get Directions</a>
+        </div>
+        <div class="center-card">
+          <h3>Community Health Center</h3>
+          <p><i class="fas fa-map-marker-alt"></i> 789 Wellness Road</p>
+          <p><i class="fas fa-clock"></i> Mon–Fri: 9 AM – 5 PM</p>
+          <p><i class="fas fa-phone"></i> +91 123 456 7892</p>
+          <p><i class="fas fa-droplet"></i> Limited after-hours emergency stock</p>
+          <a href="#" class="btn btn-outline"><i class="fas fa-location-arrow"></i> Get Directions</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand"><i class="fas fa-droplet drop"></i> BloodMate</div>
+          <p class="footer-about">Connecting hearts, saving lives through blood donation.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="../donor-registration.html">Become a Donor</a></li>
+            <li><a href="../recipient-request.html">Request Blood</a></li>
+            <li><a href="../blood-inventory.html">Blood Inventory</a></li>
+            <li><a href="../contact.html">Contact Us</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contact Info</h4>
+          <p><i class="fas fa-phone"></i> +91 123 456 7890</p>
+          <p><i class="fas fa-envelope"></i> info@bloodmate.com</p>
+          <p><i class="fas fa-map-marker-alt"></i> 123 Healthcare Street, Medical City</p>
+        </div>
+      </div>
+      <div class="footer-bottom">&copy; 2024 BloodMate. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <script>
+    const urgentData = [
+      { type:'O-',  patient:'Riya Sharma',    hospital:'City General Hospital',    units:3, urgency:'Critical' },
+      { type:'AB+', patient:'Arjun Patel',     hospital:'Regional Blood Bank',      units:2, urgency:'Urgent' },
+      { type:'B-',  patient:'Meena Joshi',     hospital:'Community Health Center',  units:4, urgency:'Critical' },
+      { type:'A+',  patient:'Rahul Verma',     hospital:'City General Hospital',    units:1, urgency:'Urgent' },
+      { type:'O+',  patient:'Sunita Kapoor',   hospital:'Regional Blood Bank',      units:2, urgency:'Urgent' },
+      { type:'AB-', patient:'Dev Choudhary',   hospital:'City General Hospital',    units:5, urgency:'Critical' },
+    ];
+    const badgeMap = { Critical:'badge-critical', Urgent:'badge-urgent' };
+    const cardMod  = { Critical:'', Urgent:'warn' };
+    const ug = document.getElementById('urgentGrid');
+    urgentData.forEach(r => {
+      ug.innerHTML += `
+        <div class="urgent-card ${cardMod[r.urgency]}">
+          <div class="uc-head">
+            <span class="uc-type">${r.type}</span>
+            <span class="badge ${badgeMap[r.urgency]}">${r.urgency}</span>
+          </div>
+          <div class="uc-patient">${r.patient}</div>
+          <div class="uc-hospital"><i class="fas fa-hospital" style="margin-right:.35rem;color:var(--blood)"></i>${r.hospital}</div>
+          <div class="uc-foot">
+            <div class="uc-units">Units needed: <strong>${r.units}</strong></div>
+            <button class="tbl-btn" onclick="alert('Connecting you with the coordination team…')">Respond</button>
+          </div>
+        </div>`;
+    });
+
+    const inventory = [
+      { type:'O+',  units:88, max:100 }, { type:'A+',  units:72, max:100 },
+      { type:'B+',  units:55, max:100 }, { type:'AB+', units:44, max:100 },
+      { type:'A-',  units:28, max:100 }, { type:'O-',  units:12, max:100 },
+      { type:'B-',  units:18, max:100 }, { type:'AB-', units:9,  max:100 },
+    ];
+    const ag = document.getElementById('availGrid');
+    inventory.forEach(i => {
+      const pct = Math.round(i.units/i.max*100);
+      const cls = pct<=20?'low':pct<=50?'mid':'ok';
+      const lbl = pct<=20?'Critical':pct<=50?'Limited':'Available';
+      const lc  = pct<=20?'var(--blood-bright)':pct<=50?'var(--orange)':'var(--green)';
+      ag.innerHTML += `
+        <div class="avail-card">
+          <div class="avail-type">${i.type}</div>
+          <div class="avail-units">${i.units} units</div>
+          <div class="avail-bar-bg"><div class="avail-bar ${cls}" data-w="${pct}" style="width:0"></div></div>
+          <div class="avail-status" style="color:${lc}">${lbl}</div>
+        </div>`;
+    });
+    setTimeout(()=>{document.querySelectorAll('.avail-bar[data-w]').forEach(b=>b.style.width=b.dataset.w+'%');},300);
+  </script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reports — BloodMate Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="admin-shared.css" />
+  <style>
+    .reports-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; }
+    .report-card { background: var(--ash); border: 1px solid var(--border); border-radius: 4px; padding: 1.6rem; }
+    .report-card-title { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+    .report-card-title i { color: var(--blood); }
+
+    /* BAR CHART */
+    .bar-chart { display: flex; align-items: flex-end; gap: 0.5rem; height: 160px; }
+    .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.4rem; height: 100%; justify-content: flex-end; }
+    .bar-fill { width: 100%; border-radius: 2px 2px 0 0; background: var(--blood); min-height: 4px; transition: height 1s cubic-bezier(0.4,0,0.2,1); position: relative; }
+    .bar-fill:hover { background: var(--blood-bright); cursor: pointer; }
+    .bar-fill::after { content: attr(data-val); position: absolute; top: -1.4rem; left: 50%; transform: translateX(-50%); font-size: 0.62rem; color: var(--white); white-space: nowrap; }
+    .bar-label { font-size: 0.65rem; color: var(--text-muted); }
+
+    /* DONUT CHART */
+    .donut-wrap { position: relative; width: 150px; height: 150px; margin: 0 auto 1rem; }
+    .donut-svg { transform: rotate(-90deg); }
+    .donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .donut-num { font-family: var(--font-display); font-size: 1.6rem; font-weight: 900; color: var(--white); line-height: 1; }
+    .donut-sub { font-size: 0.62rem; color: var(--text-muted); }
+    .donut-legend { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
+    .legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.76rem; color: var(--text-muted); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    /* LINE CHART (simple SVG) */
+    .line-chart-wrap { width: 100%; overflow: hidden; }
+    .line-chart-labels { display: flex; justify-content: space-between; margin-top: 0.4rem; }
+    .line-chart-labels span { font-size: 0.62rem; color: var(--text-muted); }
+
+    /* EXPORT CARDS */
+    .export-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.8rem; }
+    .export-card { background: var(--charcoal); border: 1px solid var(--border); border-radius: 4px; padding: 1.2rem; display: flex; align-items: center; gap: 0.8rem; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+    .export-card:hover { border-color: rgba(192,21,42,0.4); background: rgba(192,21,42,0.06); }
+    .export-icon { width: 38px; height: 38px; border-radius: 50%; background: rgba(192,21,42,0.15); display: flex; align-items: center; justify-content: center; color: var(--blood-bright); flex-shrink: 0; }
+    .export-name { font-size: 0.8rem; font-weight: 600; color: var(--white); }
+    .export-desc { font-size: 0.68rem; color: var(--text-muted); }
+
+    /* ACTIVITY TABLE */
+    .activity-row { display: flex; align-items: center; gap: 1rem; padding: 0.8rem 0; border-bottom: 1px solid var(--border); }
+    .activity-row:last-child { border-bottom: none; }
+    .activity-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0; }
+    .activity-icon.green { background: rgba(34,197,94,0.15); color: var(--green); }
+    .activity-icon.red   { background: rgba(192,21,42,0.15); color: var(--blood-bright); }
+    .activity-icon.orange{ background: rgba(251,146,60,0.15); color: var(--orange); }
+    .activity-text { flex: 1; font-size: 0.82rem; color: var(--text-light); }
+    .activity-time { font-size: 0.7rem; color: var(--text-muted); }
+
+    @media(max-width:900px){ .reports-grid{grid-template-columns:1fr;} .export-grid{grid-template-columns:1fr 1fr;} }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><a href="../index.html" class="brand-logo"><i class="fas fa-droplet drop"></i> BloodMate</a></div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-label">Main</div>
+    <a href="dashboard.html"><i class="fas fa-gauge-high"></i> Dashboard</a>
+    <a href="donors.html"><i class="fas fa-users"></i> Donors</a>
+    <a href="requests.html"><i class="fas fa-hand-holding-medical"></i> Blood Requests</a>
+    <a href="inventory.html"><i class="fas fa-warehouse"></i> Inventory</a>
+    <div class="sidebar-label">Communication</div>
+    <a href="messages.html"><i class="fas fa-envelope"></i> Messages</a>
+    <a href="reports.html" class="active"><i class="fas fa-chart-bar"></i> Reports</a>
+    <div class="sidebar-label">System</div>
+    <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+  </nav>
+  <div class="sidebar-footer"><a href="../index.html" class="logout-btn" onclick="logout()"><i class="fas fa-arrow-right-from-bracket"></i> Logout</a></div>
+</aside>
+
+<div class="admin-main">
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <button class="hamburger-btn" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+      <h1 class="topbar-title">Reports & <span>Analytics</span></h1>
+    </div>
+    <div class="topbar-right">
+      <select class="filter-select" id="periodFilter" onchange="updateCharts()" style="font-size:0.75rem">
+        <option value="6">Last 6 Months</option><option value="3">Last 3 Months</option><option value="12">Last 12 Months</option>
+      </select>
+      <div class="topbar-pill"><div class="status-dot"></div><span>Live</span></div>
+      <div class="topbar-avatar"><i class="fas fa-user"></i></div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <div class="mini-stats">
+      <div class="mini-card"><div class="mini-label">Total Donations</div><div class="mini-value">3,840</div><div class="mini-icon-bg"><i class="fas fa-heart"></i></div></div>
+      <div class="mini-card"><div class="mini-label">Requests Fulfilled</div><div class="mini-value green">4,200</div><div class="mini-icon-bg"><i class="fas fa-check-circle"></i></div></div>
+      <div class="mini-card"><div class="mini-label">Lives Saved (Est.)</div><div class="mini-value red">3,100</div><div class="mini-icon-bg"><i class="fas fa-person-walking-arrow-right"></i></div></div>
+      <div class="mini-card"><div class="mini-label">Avg. Response Time</div><div class="mini-value">2.4<span style="font-size:1rem;color:var(--text-muted)">h</span></div><div class="mini-icon-bg"><i class="fas fa-stopwatch"></i></div></div>
+    </div>
+
+    <div class="page-header">
+      <div class="page-header-left">
+        <h2>Analytics <em>Reports</em></h2>
+        <p>Blood donation trends, inventory health, and request analytics</p>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW 1 -->
+    <div class="reports-grid">
+      <!-- Donations per month bar chart -->
+      <div class="report-card">
+        <div class="report-card-title"><i class="fas fa-chart-bar"></i> Monthly Donations</div>
+        <div class="bar-chart" id="donationBarChart"></div>
+        <div class="line-chart-labels" id="donationBarLabels"></div>
+      </div>
+
+      <!-- Blood type distribution donut -->
+      <div class="report-card">
+        <div class="report-card-title"><i class="fas fa-circle-half-stroke"></i> Donations by Blood Type</div>
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:1.5rem;align-items:center">
+          <div class="donut-wrap">
+            <svg class="donut-svg" width="150" height="150" viewBox="0 0 150 150">
+              <circle cx="75" cy="75" r="55" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="22"/>
+              <circle id="d0" cx="75" cy="75" r="55" fill="none" stroke="#C0152A" stroke-width="22" stroke-dasharray="0 346" stroke-dashoffset="0"/>
+              <circle id="d1" cx="75" cy="75" r="55" fill="none" stroke="#E8192C" stroke-width="22" stroke-dasharray="0 346" stroke-dashoffset="0"/>
+              <circle id="d2" cx="75" cy="75" r="55" fill="none" stroke="#fb923c" stroke-width="22" stroke-dasharray="0 346" stroke-dashoffset="0"/>
+              <circle id="d3" cx="75" cy="75" r="55" fill="none" stroke="#facc15" stroke-width="22" stroke-dasharray="0 346" stroke-dashoffset="0"/>
+              <circle id="d4" cx="75" cy="75" r="55" fill="none" stroke="#22c55e" stroke-width="22" stroke-dasharray="0 346" stroke-dashoffset="0"/>
+              <circle id="d5" cx="75" cy="75" r="55" fill="none" stroke="#3b82f6" stroke-width="22" stroke-dasharray="0 346" stroke-dashoffset="0"/>
+            </svg>
+            <div class="donut-center"><div class="donut-num">3.8K</div><div class="donut-sub">total</div></div>
+          </div>
+          <div class="donut-legend" id="donutLegend"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW 2 -->
+    <div class="reports-grid">
+      <!-- Requests trend line -->
+      <div class="report-card">
+        <div class="report-card-title"><i class="fas fa-chart-line"></i> Request Trends</div>
+        <svg width="100%" height="160" id="lineSvg" viewBox="0 0 500 160" preserveAspectRatio="none"></svg>
+        <div class="line-chart-labels" id="lineLabels"></div>
+      </div>
+
+      <!-- Urgency breakdown -->
+      <div class="report-card">
+        <div class="report-card-title"><i class="fas fa-triangle-exclamation"></i> Request Urgency Breakdown</div>
+        <div style="display:flex;flex-direction:column;gap:1rem;margin-top:0.5rem" id="urgencyBreakdown"></div>
+      </div>
+    </div>
+
+    <!-- EXPORT REPORTS -->
+    <div class="report-card" style="margin-bottom:2rem">
+      <div class="report-card-title"><i class="fas fa-download"></i> Export Reports</div>
+      <div class="export-grid">
+        <div class="export-card" onclick="exportReport('donors')"><div class="export-icon"><i class="fas fa-users"></i></div><div><div class="export-name">Donor Report</div><div class="export-desc">Full donor list & stats</div></div></div>
+        <div class="export-card" onclick="exportReport('requests')"><div class="export-icon"><i class="fas fa-hand-holding-medical"></i></div><div><div class="export-name">Request Report</div><div class="export-desc">All blood requests</div></div></div>
+        <div class="export-card" onclick="exportReport('inventory')"><div class="export-icon"><i class="fas fa-warehouse"></i></div><div><div class="export-name">Inventory Report</div><div class="export-desc">Stock levels & history</div></div></div>
+        <div class="export-card" onclick="exportReport('monthly')"><div class="export-icon"><i class="fas fa-calendar"></i></div><div><div class="export-name">Monthly Summary</div><div class="export-desc">This month's overview</div></div></div>
+        <div class="export-card" onclick="exportReport('lives')"><div class="export-icon"><i class="fas fa-heart"></i></div><div><div class="export-name">Impact Report</div><div class="export-desc">Lives saved & matched</div></div></div>
+        <div class="export-card" onclick="exportReport('audit')"><div class="export-icon"><i class="fas fa-shield-halved"></i></div><div><div class="export-name">Audit Log</div><div class="export-desc">Admin activity log</div></div></div>
+      </div>
+    </div>
+
+    <!-- RECENT ACTIVITY -->
+    <div class="table-card">
+      <div class="table-card-head"><h3><i class="fas fa-clock-rotate-left"></i> Recent Admin Activity</h3></div>
+      <div style="padding:0.5rem 1.4rem" id="activityFeed"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const months6 = ['Jan','Feb','Mar','Apr','May','Jun'];
+const donations6 = [210, 265, 190, 310, 280, 342];
+const requests6  = [180, 220, 160, 270, 240, 295];
+
+const bloodTypes = [
+  { type:'O+',  pct:32, color:'#C0152A' },
+  { type:'A+',  pct:28, color:'#E8192C' },
+  { type:'B+',  pct:18, color:'#fb923c' },
+  { type:'AB+', pct:10, color:'#facc15' },
+  { type:'O-',  pct:6,  color:'#22c55e' },
+  { type:'Others',pct:6,color:'#3b82f6' },
+];
+
+const urgency = [
+  { label:'Critical', count:320,  total:1200, cls:'badge-critical' },
+  { label:'Urgent',   count:480,  total:1200, cls:'badge-urgent' },
+  { label:'Normal',   count:400,  total:1200, cls:'badge-normal' },
+];
+
+const activities = [
+  { icon:'check-circle', type:'green',  text:'Approved blood request #1042 — O- for Civil Hospital', time:'10 min ago' },
+  { icon:'plus-circle',  type:'green',  text:'Added 10 units of O+ to inventory from City Blood Bank', time:'1 hr ago' },
+  { icon:'xmark-circle', type:'red',    text:'Rejected request #1039 — duplicate submission', time:'2 hr ago' },
+  { icon:'user-plus',    type:'green',  text:'New donor registered — Ankit Desai (A+, Ahmedabad)', time:'3 hr ago' },
+  { icon:'triangle-exclamation', type:'orange', text:'Low stock alert: O- below critical threshold (12 units)', time:'5 hr ago' },
+  { icon:'envelope',     type:'green',  text:'Replied to message from Dr. Mehta (AB+ request)', time:'6 hr ago' },
+];
+
+function buildBarChart() {
+  const chart = document.getElementById('donationBarChart');
+  const labels = document.getElementById('donationBarLabels');
+  const max = Math.max(...donations6);
+  chart.innerHTML = '';
+  labels.innerHTML = '';
+  donations6.forEach((v,i) => {
+    const h = Math.round((v/max)*130);
+    chart.innerHTML += `<div class="bar-col">
+      <div class="bar-fill" data-val="${v}" style="height:${h}px;background:${i===donations6.length-1?'var(--blood-bright)':'var(--blood)'}"></div>
+    </div>`;
+    labels.innerHTML += `<span style="font-size:0.62rem;color:var(--text-muted);text-align:center;flex:1">${months6[i]}</span>`;
+  });
+}
+
+function buildDonut() {
+  const circ = 2 * Math.PI * 55;
+  let offset = 0;
+  bloodTypes.forEach((bt, i) => {
+    const arc = (bt.pct / 100) * circ;
+    const gap = 2;
+    const el = document.getElementById('d'+i);
+    if (el) {
+      el.setAttribute('stroke-dasharray', `${arc - gap} ${circ - arc + gap}`);
+      el.setAttribute('stroke-dashoffset', -offset);
+      offset += arc;
+    }
+  });
+  const legend = document.getElementById('donutLegend');
+  legend.innerHTML = bloodTypes.map(bt => `
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${bt.color}"></div>
+      <span>${bt.type}</span>
+      <span style="margin-left:auto;font-weight:600;color:var(--white)">${bt.pct}%</span>
+    </div>`).join('');
+}
+
+function buildLineChart() {
+  const max = Math.max(...requests6, ...donations6);
+  const w = 500, h = 140, pad = 10;
+  const pts = (arr) => arr.map((v,i) => {
+    const x = pad + (i/(arr.length-1)) * (w - 2*pad);
+    const y = h - pad - ((v/max) * (h - 2*pad));
+    return `${x},${y}`;
+  }).join(' ');
+
+  const svg = document.getElementById('lineSvg');
+  const reqPts = requests6.map((v,i) => ({ x: 10 + (i/5)*480, y: 140 - 10 - ((v/max)*120) }));
+  const donPts = donations6.map((v,i) => ({ x: 10 + (i/5)*480, y: 140 - 10 - ((v/max)*120) }));
+
+  const pathStr = (pts) => pts.map((p,i) => (i===0?`M${p.x},${p.y}`:`L${p.x},${p.y}`)).join(' ');
+  const areaStr = (pts) => pathStr(pts) + ` L${pts[pts.length-1].x},150 L${pts[0].x},150 Z`;
+
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="gR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C0152A" stop-opacity="0.3"/><stop offset="1" stop-color="#C0152A" stop-opacity="0"/></linearGradient>
+      <linearGradient id="gD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22c55e" stop-opacity="0.2"/><stop offset="1" stop-color="#22c55e" stop-opacity="0"/></linearGradient>
+    </defs>
+    <path d="${areaStr(reqPts)}" fill="url(#gR)"/>
+    <path d="${areaStr(donPts)}" fill="url(#gD)"/>
+    <path d="${pathStr(reqPts)}" fill="none" stroke="#C0152A" stroke-width="2" stroke-linejoin="round"/>
+    <path d="${pathStr(donPts)}" fill="none" stroke="#22c55e" stroke-width="2" stroke-linejoin="round"/>
+    ${reqPts.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="3" fill="#C0152A"/>`).join('')}
+    ${donPts.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="3" fill="#22c55e"/>`).join('')}`;
+
+  const labels = document.getElementById('lineLabels');
+  labels.innerHTML = months6.map(m=>`<span style="flex:1;text-align:center;font-size:0.62rem;color:var(--text-muted)">${m}</span>`).join('');
+  labels.style.display = 'flex';
+
+  // Legend
+  const legend = `<div style="display:flex;gap:1.5rem;margin-top:0.8rem">
+    <div style="display:flex;align-items:center;gap:0.4rem;font-size:0.72rem;color:var(--text-muted)"><div style="width:12px;height:3px;background:#C0152A;border-radius:2px"></div> Requests</div>
+    <div style="display:flex;align-items:center;gap:0.4rem;font-size:0.72rem;color:var(--text-muted)"><div style="width:12px;height:3px;background:#22c55e;border-radius:2px"></div> Donations</div>
+  </div>`;
+  svg.insertAdjacentHTML('afterend', legend);
+}
+
+function buildUrgency() {
+  const el = document.getElementById('urgencyBreakdown');
+  el.innerHTML = urgency.map(u => {
+    const pct = Math.round((u.count / u.total) * 100);
+    return `<div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem">
+        <div style="display:flex;align-items:center;gap:0.6rem"><span class="badge ${u.cls}">${u.label}</span></div>
+        <span style="font-family:var(--font-display);font-weight:700;font-size:1rem;color:var(--white)">${u.count} <span style="font-size:0.7rem;color:var(--text-muted)">/ ${u.total}</span></span>
+      </div>
+      <div style="height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;border-radius:3px;background:${u.label==='Critical'?'var(--blood-bright)':u.label==='Urgent'?'var(--orange)':'var(--green)'}"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function buildActivity() {
+  const el = document.getElementById('activityFeed');
+  el.innerHTML = activities.map(a => `
+    <div class="activity-row">
+      <div class="activity-icon ${a.type}"><i class="fas fa-${a.icon}"></i></div>
+      <div class="activity-text">${a.text}</div>
+      <div class="activity-time">${a.time}</div>
+    </div>`).join('');
+}
+
+function updateCharts() { buildBarChart(); buildDonut(); buildLineChart(); buildUrgency(); buildActivity(); }
+function exportReport(type) { showToast(`Generating ${type} report…`, 'success'); }
+
+function showToast(msg,type) { const n=document.createElement('div'); n.innerHTML=`<i class="fas fa-${type==='success'?'check-circle':'circle-exclamation'}"></i> ${msg}`; Object.assign(n.style,{position:'fixed',top:'1.5rem',right:'1.5rem',padding:'0.85rem 1.3rem',background:type==='success'?'#16a34a':'#C0152A',color:'#fff',fontFamily:'Inter,sans-serif',fontSize:'0.84rem',fontWeight:'500',borderRadius:'4px',zIndex:'9999',display:'flex',alignItems:'center',gap:'0.5rem',boxShadow:'0 8px 24px rgba(0,0,0,0.35)'}); document.body.appendChild(n); setTimeout(()=>n.remove(),3000); }
+function logout() { localStorage.removeItem('admin_token'); localStorage.removeItem('admin_user'); window.location.href='login.html'; }
+
+window.addEventListener('load', updateCharts);
+</script>
+</body>
+</html>

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blood Requests — BloodMate Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="admin-shared.css" />
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><a href="../index.html" class="brand-logo"><i class="fas fa-droplet drop"></i> BloodMate</a></div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-label">Main</div>
+    <a href="dashboard.html"><i class="fas fa-gauge-high"></i> Dashboard</a>
+    <a href="donors.html"><i class="fas fa-users"></i> Donors</a>
+    <a href="requests.html" class="active"><i class="fas fa-hand-holding-medical"></i> Blood Requests</a>
+    <a href="inventory.html"><i class="fas fa-warehouse"></i> Inventory</a>
+    <div class="sidebar-label">Communication</div>
+    <a href="messages.html"><i class="fas fa-envelope"></i> Messages</a>
+    <a href="reports.html"><i class="fas fa-chart-bar"></i> Reports</a>
+    <div class="sidebar-label">System</div>
+    <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+  </nav>
+  <div class="sidebar-footer"><a href="../index.html" class="logout-btn" onclick="logout()"><i class="fas fa-arrow-right-from-bracket"></i> Logout</a></div>
+</aside>
+
+<div class="admin-main">
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <button class="hamburger-btn" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+      <h1 class="topbar-title">Blood <span>Requests</span></h1>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-pill"><div class="status-dot"></div><span>System Live</span></div>
+      <div class="topbar-avatar"><i class="fas fa-user"></i></div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <div class="mini-stats">
+      <div class="mini-card"><div class="mini-label">Total Requests</div><div class="mini-value">4,200</div><div class="mini-icon-bg"><i class="fas fa-hand-holding-medical"></i></div></div>
+      <div class="mini-card"><div class="mini-label">Pending Review</div><div class="mini-value red">47</div><div class="mini-icon-bg"><i class="fas fa-clock"></i></div></div>
+      <div class="mini-card"><div class="mini-label">Approved Today</div><div class="mini-value green">12</div><div class="mini-icon-bg"><i class="fas fa-check-circle"></i></div></div>
+      <div class="mini-card"><div class="mini-label">Critical / Urgent</div><div class="mini-value red">8</div><div class="mini-icon-bg"><i class="fas fa-triangle-exclamation"></i></div></div>
+    </div>
+
+    <div class="page-header">
+      <div class="page-header-left">
+        <h2>All Blood <em>Requests</em></h2>
+        <p>Review, approve or reject incoming blood requests</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('addRequestModal')"><i class="fas fa-plus"></i> New Request</button>
+    </div>
+
+    <!-- URGENT BANNER -->
+    <div id="urgentBanner" style="background:rgba(139,0,0,0.2);border:1px solid rgba(192,21,42,0.35);border-left:4px solid var(--blood-bright);border-radius:4px;padding:1rem 1.4rem;display:flex;align-items:center;gap:0.8rem;margin-bottom:1.5rem">
+      <i class="fas fa-triangle-exclamation" style="color:var(--blood-bright)"></i>
+      <span style="font-size:0.84rem;color:var(--text-light)"><strong style="color:var(--white)">8 critical requests</strong> require immediate attention. Review and match donors now.</span>
+      <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="filterByUrgency('Critical')">View Critical</button>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-wrap"><i class="fas fa-search"></i><input class="search-input" type="text" id="reqSearch" placeholder="Search patient, hospital…" oninput="filterRequests()" /></div>
+      <select class="filter-select" id="filterReqBlood" onchange="filterRequests()">
+        <option value="">All Blood Types</option>
+        <option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+      </select>
+      <select class="filter-select" id="filterUrgency" onchange="filterRequests()">
+        <option value="">All Urgency</option><option>Critical</option><option>Urgent</option><option>Normal</option>
+      </select>
+      <select class="filter-select" id="filterReqStatus" onchange="filterRequests()">
+        <option value="">All Status</option><option>Pending</option><option>Approved</option><option>Rejected</option>
+      </select>
+    </div>
+
+    <div class="table-card">
+      <div class="table-card-head">
+        <h3><i class="fas fa-hand-holding-medical"></i> Request List</h3>
+        <span id="reqCount" style="font-size:0.75rem;color:var(--text-muted)">Showing all requests</span>
+      </div>
+      <table class="admin-table">
+        <thead>
+          <tr><th>Patient</th><th>Blood Type</th><th>Units</th><th>Hospital</th><th>Urgency</th><th>Date</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="reqTableBody"></tbody>
+      </table>
+      <div class="pagination">
+        <div class="pagination-info">Page 1 of 420</div>
+        <div class="pagination-btns">
+          <button class="page-btn"><i class="fas fa-chevron-left"></i></button>
+          <button class="page-btn active">1</button><button class="page-btn">2</button><button class="page-btn">3</button>
+          <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW REQUEST MODAL -->
+<div class="modal-overlay" id="viewReqModal">
+  <div class="modal-box wide">
+    <div class="modal-head"><h3>Request Details</h3><button class="modal-close" onclick="closeModal('viewReqModal')"><i class="fas fa-xmark"></i></button></div>
+    <div class="modal-body" id="viewReqBody"></div>
+    <div class="modal-foot">
+      <button class="btn btn-danger btn-sm" onclick="rejectReq()"><i class="fas fa-xmark"></i> Reject</button>
+      <button class="btn btn-primary btn-sm" onclick="approveReq()"><i class="fas fa-check"></i> Approve</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD REQUEST MODAL -->
+<div class="modal-overlay" id="addRequestModal">
+  <div class="modal-box wide">
+    <div class="modal-head"><h3>New Blood Request</h3><button class="modal-close" onclick="closeModal('addRequestModal')"><i class="fas fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <div class="form-row-2">
+        <div class="form-group"><label class="form-label">Patient Name</label><input class="form-input" type="text" placeholder="Full name" /></div>
+        <div class="form-group"><label class="form-label">Age</label><input class="form-input" type="number" /></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group"><label class="form-label">Blood Type Required</label>
+          <select class="form-select"><option value="">Select</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Units Required</label><input class="form-input" type="number" min="1" value="1" /></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group"><label class="form-label">Hospital / Location</label><input class="form-input" type="text" placeholder="Hospital name" /></div>
+        <div class="form-group"><label class="form-label">Urgency Level</label>
+          <select class="form-select"><option>Normal</option><option>Urgent</option><option>Critical</option></select>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Contact Number</label><input class="form-input" type="tel" placeholder="+91 XXXXX XXXXX" /></div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" placeholder="Additional information…"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeModal('addRequestModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveRequest()"><i class="fas fa-check"></i> Submit Request</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const requests = [
+  { id:1, patient:'Riya Sharma',   blood:'O-',  units:2, hospital:'Civil Hospital, Ahmedabad', urgency:'Critical', date:'18 Jun 2024', status:'Pending',  contact:'+91 98765 11111' },
+  { id:2, patient:'Arjun Patel',   blood:'AB+', units:1, hospital:'Apollo, Surat',             urgency:'Urgent',   date:'17 Jun 2024', status:'Pending',  contact:'+91 87654 22222' },
+  { id:3, patient:'Meena Joshi',   blood:'B+',  units:3, hospital:'Sterling, Ahmedabad',       urgency:'Normal',   date:'17 Jun 2024', status:'Approved', contact:'+91 76543 33333' },
+  { id:4, patient:'Rahul Verma',   blood:'A+',  units:1, hospital:'Zydus, Ahmedabad',          urgency:'Normal',   date:'16 Jun 2024', status:'Approved', contact:'+91 65432 44444' },
+  { id:5, patient:'Sunita Kapoor', blood:'O+',  units:4, hospital:'Kiran, Surat',              urgency:'Urgent',   date:'15 Jun 2024', status:'Pending',  contact:'+91 54321 55555' },
+  { id:6, patient:'Deepak Singh',  blood:'A-',  units:2, hospital:'Civil Hospital, Vadodara',  urgency:'Critical', date:'15 Jun 2024', status:'Rejected', contact:'+91 43210 66666' },
+  { id:7, patient:'Nisha Gupta',   blood:'B-',  units:1, hospital:'AIIMS, Ahmedabad',          urgency:'Urgent',   date:'14 Jun 2024', status:'Pending',  contact:'+91 32109 77777' },
+  { id:8, patient:'Tarun Mehta',   blood:'AB-', units:2, hospital:'Fortis, Ahmedabad',         urgency:'Normal',   date:'13 Jun 2024', status:'Approved', contact:'+91 21098 88888' },
+];
+
+const urgBadge = { Critical:'badge-critical', Urgent:'badge-urgent', Normal:'badge-normal' };
+const stBadge  = { Pending:'badge-pending', Approved:'badge-approved', Rejected:'badge-rejected' };
+let currentReq = null;
+
+function renderRequests(list) {
+  const tbody = document.getElementById('reqTableBody');
+  tbody.innerHTML = '';
+  if (!list.length) { tbody.innerHTML=`<tr><td colspan="8"><div class="empty-state"><i class="fas fa-inbox"></i><p>No requests found</p></div></td></tr>`; return; }
+  list.forEach(r => {
+    tbody.innerHTML += `<tr>
+      <td>${r.patient}</td>
+      <td><span class="blood-type-chip">${r.blood}</span></td>
+      <td>${r.units}</td>
+      <td style="color:var(--text-muted);font-size:0.78rem">${r.hospital}</td>
+      <td><span class="badge ${urgBadge[r.urgency]}">${r.urgency}</span></td>
+      <td style="color:var(--text-muted)">${r.date}</td>
+      <td><span class="badge ${stBadge[r.status]}">${r.status}</span></td>
+      <td><div class="table-actions">
+        <button class="btn btn-ghost btn-sm" onclick="viewRequest(${r.id})"><i class="fas fa-eye"></i></button>
+        ${r.status==='Pending'?`<button class="btn btn-primary btn-sm" onclick="quickApprove(${r.id})"><i class="fas fa-check"></i></button><button class="btn btn-danger btn-sm" onclick="quickReject(${r.id})"><i class="fas fa-xmark"></i></button>`:''}
+      </div></td>
+    </tr>`;
+  });
+}
+
+function filterRequests() {
+  const q  = document.getElementById('reqSearch').value.toLowerCase();
+  const bt = document.getElementById('filterReqBlood').value;
+  const ug = document.getElementById('filterUrgency').value;
+  const st = document.getElementById('filterReqStatus').value;
+  const res = requests.filter(r =>
+    (!q  || r.patient.toLowerCase().includes(q) || r.hospital.toLowerCase().includes(q)) &&
+    (!bt || r.blood===bt) && (!ug || r.urgency===ug) && (!st || r.status===st)
+  );
+  renderRequests(res);
+  document.getElementById('reqCount').textContent = `Showing ${res.length} of ${requests.length}`;
+}
+
+function filterByUrgency(u) {
+  document.getElementById('filterUrgency').value = u;
+  filterRequests();
+}
+
+function viewRequest(id) {
+  currentReq = requests.find(r => r.id===id);
+  const r = currentReq;
+  document.getElementById('viewReqBody').innerHTML = `
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem">
+      <div style="width:52px;height:52px;border-radius:50%;background:rgba(192,21,42,0.15);border:1px solid rgba(192,21,42,0.3);display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:var(--blood-bright)"><i class="fas fa-droplet"></i></div>
+      <div><div style="font-family:var(--font-display);font-size:1.2rem;font-weight:700">${r.patient}</div>
+      <div><span class="blood-type-chip">${r.blood}</span>&nbsp;<span class="badge ${urgBadge[r.urgency]}">${r.urgency}</span>&nbsp;<span class="badge ${stBadge[r.status]}">${r.status}</span></div></div>
+    </div>
+    <hr class="detail-divider"/>
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-label">Units Required</div><div class="detail-value">${r.units} unit(s)</div></div>
+      <div class="detail-item"><div class="detail-label">Hospital</div><div class="detail-value">${r.hospital}</div></div>
+      <div class="detail-item"><div class="detail-label">Contact</div><div class="detail-value">${r.contact}</div></div>
+      <div class="detail-item"><div class="detail-label">Request Date</div><div class="detail-value">${r.date}</div></div>
+    </div>`;
+  openModal('viewReqModal');
+}
+
+function approveReq() { if(currentReq) { currentReq.status='Approved'; showToast('Request approved','success'); closeModal('viewReqModal'); renderRequests(requests); } }
+function rejectReq()  { if(currentReq) { currentReq.status='Rejected'; showToast('Request rejected','error'); closeModal('viewReqModal'); renderRequests(requests); } }
+function quickApprove(id) { const r=requests.find(x=>x.id===id); r.status='Approved'; showToast('Request approved','success'); renderRequests(requests); }
+function quickReject(id)  { const r=requests.find(x=>x.id===id); r.status='Rejected'; showToast('Request rejected','error');  renderRequests(requests); }
+function saveRequest() { showToast('Request submitted','success'); closeModal('addRequestModal'); }
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(el => el.addEventListener('click', e => { if(e.target===el) el.classList.remove('open'); }));
+
+function showToast(msg, type) {
+  const n=document.createElement('div');
+  n.innerHTML=`<i class="fas fa-${type==='success'?'check-circle':'circle-exclamation'}"></i> ${msg}`;
+  Object.assign(n.style,{position:'fixed',top:'1.5rem',right:'1.5rem',padding:'0.85rem 1.3rem',background:type==='success'?'#16a34a':'#C0152A',color:'#fff',fontFamily:'Inter,sans-serif',fontSize:'0.84rem',fontWeight:'500',borderRadius:'4px',zIndex:'9999',display:'flex',alignItems:'center',gap:'0.5rem',boxShadow:'0 8px 24px rgba(0,0,0,0.35)'});
+  document.body.appendChild(n); setTimeout(()=>n.remove(),3000);
+}
+function logout() { localStorage.removeItem('admin_token'); localStorage.removeItem('admin_user'); window.location.href='login.html'; }
+
+renderRequests(requests);
+</script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Authentication — BloodMate</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blood:#C0152A; --blood-deep:#8B0000; --blood-bright:#E8192C;
+      --ink:#0D0D0D; --ash:#1A1A1A; --charcoal:#242424;
+      --border:rgba(255,255,255,0.07); --text-muted:#888; --text-light:#CCCCCC; --white:#FFFFFF;
+      --green:#22c55e;
+      --font-display:'Playfair Display',Georgia,serif;
+      --font-ui:'Bebas Neue',sans-serif;
+      --font-body:'Inter',system-ui,sans-serif;
+    }
+    html,body{height:100%;}
+    body{background:var(--ink);color:var(--white);font-family:var(--font-body);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;position:relative;overflow-x:hidden;}
+    body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 30%,rgba(192,21,42,.15) 0%,transparent 55%),radial-gradient(ellipse at 80% 70%,rgba(139,0,0,.12) 0%,transparent 55%);pointer-events:none;}
+    ::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--ink);} ::-webkit-scrollbar-thumb{background:var(--blood);border-radius:2px;}
+
+    /* BACK LINK */
+    .back-link{position:fixed;top:1.5rem;left:1.5rem;display:flex;align-items:center;gap:.5rem;font-size:.78rem;color:var(--text-muted);text-decoration:none;transition:color .2s;z-index:10;}
+    .back-link:hover{color:var(--white);}
+
+    /* CARD */
+    .auth-card{position:relative;z-index:1;width:100%;max-width:480px;background:var(--ash);border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+
+    /* HEADER */
+    .auth-header{padding:2.2rem 2rem 1.8rem;text-align:center;border-bottom:1px solid var(--border);background:rgba(192,21,42,.06);}
+    .auth-logo{font-family:var(--font-display);font-size:1.5rem;font-weight:900;display:flex;align-items:center;justify-content:center;gap:.5rem;margin-bottom:.7rem;}
+    .auth-logo .drop{color:var(--blood-bright);animation:pulse-drop 2s ease-in-out infinite;}
+    @keyframes pulse-drop{0%,100%{filter:drop-shadow(0 0 4px var(--blood-bright))}50%{filter:drop-shadow(0 0 14px var(--blood-bright))}}
+    .auth-header h2{font-family:var(--font-display);font-size:1.1rem;font-weight:700;margin-bottom:.3rem;}
+    .auth-header p{font-size:.78rem;color:var(--text-muted);}
+
+    /* TABS */
+    .auth-tabs{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--border);}
+    .auth-tab{padding:.9rem;text-align:center;cursor:pointer;font-size:.75rem;font-weight:600;letter-spacing:.04em;color:var(--text-muted);background:transparent;border:none;transition:color .2s,background .2s;position:relative;font-family:var(--font-body);}
+    .auth-tab::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--blood-bright);transform:scaleX(0);transition:transform .3s;}
+    .auth-tab:hover{color:var(--text-light);background:rgba(255,255,255,.02);}
+    .auth-tab.active{color:var(--white);background:rgba(192,21,42,.06);}
+    .auth-tab.active::after{transform:scaleX(1);}
+    .auth-tab i{margin-right:.4rem;}
+
+    /* BODY */
+    .auth-body{padding:2rem;}
+
+    /* FORMS */
+    .auth-form{display:none;}
+    .auth-form.active{display:block;}
+
+    /* INFO BOX */
+    .info-box{display:flex;align-items:flex-start;gap:.7rem;padding:.9rem 1rem;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:3px;margin-bottom:1.4rem;}
+    .info-box i{color:var(--green);flex-shrink:0;margin-top:2px;}
+    .info-box p{font-size:.78rem;color:var(--text-light);line-height:1.5;}
+
+    .admin-tag{display:inline-flex;align-items:center;gap:.4rem;background:rgba(192,21,42,.12);border:1px solid rgba(192,21,42,.25);color:var(--blood-bright);font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:.25rem .7rem;border-radius:2px;margin-bottom:1.2rem;}
+
+    /* FORM FIELDS */
+    .f-group{margin-bottom:1.2rem;}
+    .f-group label{display:block;font-size:.7rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.4rem;}
+    .input-wrap{position:relative;}
+    .input-wrap i.icon-left{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);font-size:.8rem;color:var(--text-muted);pointer-events:none;}
+    .input-wrap input{width:100%;background:var(--charcoal);border:1px solid var(--border);border-radius:3px;padding:.72rem .9rem .72rem 2.4rem;font-family:var(--font-body);font-size:.85rem;color:var(--white);transition:border-color .2s;}
+    .input-wrap input:focus{outline:none;border-color:var(--blood);}
+    .input-wrap input::placeholder{color:#555;}
+    .toggle-pwd{position:absolute;right:.85rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:.85rem;transition:color .2s;}
+    .toggle-pwd:hover{color:var(--blood-bright);}
+
+    /* BTN */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.72rem 1.6rem;border-radius:3px;cursor:pointer;font-family:var(--font-body);font-size:.82rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border:none;transition:all .2s;text-decoration:none;width:100%;}
+    .btn-primary{background:var(--blood);color:var(--white);}
+    .btn-primary:hover{background:var(--blood-bright);transform:translateY(-1px);}
+    .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+    /* FOOTER LINKS */
+    .auth-foot{text-align:center;margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid var(--border);}
+    .auth-foot p{font-size:.78rem;color:var(--text-muted);margin-bottom:.4rem;}
+    .auth-foot a{color:var(--blood-bright);text-decoration:none;font-weight:500;}
+    .auth-foot a:hover{text-decoration:underline;}
+
+    /* NOTIFICATION */
+    .notif{display:none;padding:.85rem 1rem;border-radius:3px;margin-bottom:1.2rem;font-size:.8rem;line-height:1.5;}
+    .notif.show{display:block;}
+    .notif.success{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:var(--green);}
+    .notif.error{background:rgba(232,25,44,.1);border:1px solid rgba(232,25,44,.25);color:var(--blood-bright);}
+    .notif.info{background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);color:#a5b4fc;}
+
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-radius:50%;border-top-color:white;animation:spin .8s linear infinite;}
+  </style>
+</head>
+<body>
+
+  <a href="../index.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to BloodMate</a>
+
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-logo"><i class="fas fa-droplet drop"></i> BloodMate</div>
+      <h2>Welcome to BloodMate</h2>
+      <p>Your trusted blood donation platform</p>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="register"><i class="fas fa-user-plus"></i>Register</button>
+      <button class="auth-tab" data-tab="login"><i class="fas fa-sign-in-alt"></i>Login</button>
+      <button class="auth-tab" data-tab="admin"><i class="fas fa-user-shield"></i>Admin</button>
+    </div>
+
+    <div class="auth-body">
+      <div id="notif" class="notif"></div>
+
+      <!-- REGISTER -->
+      <form id="registerForm" class="auth-form active" onsubmit="handleRegister(event)">
+        <div class="info-box">
+          <i class="fas fa-info-circle"></i>
+          <p>After registration, your login credentials will be sent to your email address.</p>
+        </div>
+        <div class="f-group">
+          <label>Full Name</label>
+          <div class="input-wrap">
+            <i class="fas fa-user icon-left"></i>
+            <input type="text" name="fullname" required placeholder="Enter your full name" />
+          </div>
+        </div>
+        <div class="f-group">
+          <label>Email Address</label>
+          <div class="input-wrap">
+            <i class="fas fa-envelope icon-left"></i>
+            <input type="email" name="email" required placeholder="Enter your email" />
+          </div>
+        </div>
+        <div class="f-group">
+          <label>Phone Number</label>
+          <div class="input-wrap">
+            <i class="fas fa-phone icon-left"></i>
+            <input type="tel" name="phone" required placeholder="Enter your phone number" />
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" id="registerBtn"><i class="fas fa-user-plus"></i> Create Account</button>
+        <div class="auth-foot">
+          <p>Already have an account? <a href="#" onclick="switchTab('login')">Login here</a></p>
+        </div>
+      </form>
+
+      <!-- LOGIN -->
+      <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
+        <div class="f-group">
+          <label>Username</label>
+          <div class="input-wrap">
+            <i class="fas fa-user icon-left"></i>
+            <input type="text" name="username" required placeholder="Enter your username" />
+          </div>
+        </div>
+        <div class="f-group">
+          <label>Password</label>
+          <div class="input-wrap">
+            <i class="fas fa-lock icon-left"></i>
+            <input type="password" id="loginPwd" name="password" required placeholder="Enter your password" />
+            <button type="button" class="toggle-pwd" onclick="togglePwd('loginPwd',this)"><i class="fas fa-eye"></i></button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" id="loginBtn"><i class="fas fa-sign-in-alt"></i> Login</button>
+        <div class="auth-foot">
+          <p>Don't have an account? <a href="#" onclick="switchTab('register')">Register here</a></p>
+          <p><a href="#" onclick="switchTab('admin')">Admin Access</a></p>
+        </div>
+      </form>
+
+      <!-- ADMIN -->
+      <form id="adminForm" class="auth-form" onsubmit="handleAdmin(event)">
+        <div class="admin-tag"><i class="fas fa-shield-alt"></i> Admin Access</div>
+        <div class="f-group">
+          <label>Admin Username</label>
+          <div class="input-wrap">
+            <i class="fas fa-user-shield icon-left"></i>
+            <input type="text" name="username" required placeholder="Enter admin username" />
+          </div>
+        </div>
+        <div class="f-group">
+          <label>Admin Password</label>
+          <div class="input-wrap">
+            <i class="fas fa-lock icon-left"></i>
+            <input type="password" id="adminPwd" name="password" required placeholder="Enter admin password" />
+            <button type="button" class="toggle-pwd" onclick="togglePwd('adminPwd',this)"><i class="fas fa-eye"></i></button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" id="adminBtn"><i class="fas fa-sign-in-alt"></i> Admin Login</button>
+        <div class="auth-foot">
+          <p><a href="#" onclick="switchTab('login')">User Login</a></p>
+          <p><a href="../index.html">Back to Website</a></p>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Tab switching
+    function switchTab(name) {
+      document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+      document.querySelector(`.auth-tab[data-tab="${name}"]`).classList.add('active');
+      document.getElementById(name+'Form').classList.add('active');
+      hideNotif();
+    }
+    document.querySelectorAll('.auth-tab').forEach(t => {
+      t.addEventListener('click', () => switchTab(t.dataset.tab));
+    });
+
+    function showNotif(msg, type) {
+      const n = document.getElementById('notif');
+      n.textContent = msg; n.className = 'notif show ' + type;
+    }
+    function hideNotif() { document.getElementById('notif').className = 'notif'; }
+
+    function togglePwd(id, btn) {
+      const inp = document.getElementById(id);
+      const show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      btn.innerHTML = show ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+    }
+
+    function handleRegister(e) {
+      e.preventDefault();
+      const btn = document.getElementById('registerBtn');
+      btn.innerHTML = '<span class="spinner"></span> Creating…'; btn.disabled = true;
+      setTimeout(() => {
+        showNotif('✓ Account created! Credentials sent to your email.', 'success');
+        btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account'; btn.disabled = false;
+        e.target.reset();
+      }, 1600);
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('loginBtn');
+      btn.innerHTML = '<span class="spinner"></span> Signing in…'; btn.disabled = true;
+      setTimeout(() => {
+        showNotif('✓ Login successful! Redirecting…', 'success');
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login'; btn.disabled = false;
+      }, 1400);
+    }
+
+    function handleAdmin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('adminBtn');
+      btn.innerHTML = '<span class="spinner"></span> Authenticating…'; btn.disabled = true;
+      setTimeout(() => {
+        showNotif('✓ Admin authenticated. Redirecting to dashboard…', 'success');
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Admin Login'; btn.disabled = false;
+        setTimeout(() => { window.location.href = '../admin/dashboard.html'; }, 900);
+      }, 1600);
+    }
+  </script>
+</body>
+</html>

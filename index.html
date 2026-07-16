@@ -1,0 +1,1383 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BloodMate — Save Lives, Donate Blood</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+    :root {
+      --blood:      #C0152A;
+      --blood-deep: #8B0000;
+      --blood-bright:#E8192C;
+      --ink:        #0D0D0D;
+      --ash:        #1A1A1A;
+      --charcoal:   #2A2A2A;
+      --fog:        #F5F0EC;
+      --cream:      #FAF7F4;
+      --text-muted: #999;
+      --text-light: #CCCCCC;
+      --white:      #FFFFFF;
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-ui:    'Bebas Neue', sans-serif;
+      --font-body:  'Inter', system-ui, sans-serif;
+    }
+ 
+    html { scroll-behavior: smooth; }
+ 
+    body {
+      background: var(--ink);
+      color: var(--white);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+    }
+ 
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--ink); }
+    ::-webkit-scrollbar-thumb { background: var(--blood); border-radius: 2px; }
+ 
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 4rem;
+      transition: background 0.4s, backdrop-filter 0.4s;
+    }
+    nav.scrolled {
+      background: rgba(13,13,13,0.92);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(192,21,42,0.18);
+    }
+    .nav-logo {
+      font-family: var(--font-display);
+      font-size: 1.5rem; font-weight: 900;
+      letter-spacing: -0.02em;
+      color: var(--white);
+      text-decoration: none;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .nav-logo .drop { color: var(--blood-bright); animation: pulse-drop 2s ease-in-out infinite; }
+    @keyframes pulse-drop {
+      0%,100% { filter: drop-shadow(0 0 4px var(--blood-bright)); }
+      50%      { filter: drop-shadow(0 0 14px var(--blood-bright)); }
+    }
+    .nav-links {
+      display: flex; align-items: center; gap: 2rem;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 0.78rem; font-weight: 500; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-light);
+      text-decoration: none; transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--white); }
+    .nav-links .btn-nav-emergency {
+      background: var(--blood);
+      color: var(--white) !important;
+      padding: 0.45rem 1.1rem;
+      border-radius: 2px;
+      transition: background 0.2s !important;
+    }
+    .nav-links .btn-nav-emergency:hover { background: var(--blood-bright) !important; }
+    .nav-links .btn-nav-auth {
+      border: 1px solid rgba(255,255,255,0.25);
+      color: var(--white) !important;
+      padding: 0.45rem 1.1rem;
+      border-radius: 2px;
+    }
+    .nav-links .btn-nav-auth:hover { border-color: var(--white); }
+ 
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+    .hamburger span { display: block; width: 24px; height: 2px; background: var(--white); transition: 0.3s; }
+ 
+    /* ── HERO ── */
+    .hero {
+      position: relative; min-height: 100vh;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      text-align: center;
+      padding: 10rem 2rem 6rem;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(139,0,0,0.35) 0%, transparent 70%),
+                  radial-gradient(ellipse 40% 40% at 80% 80%, rgba(192,21,42,0.12) 0%, transparent 60%),
+                  var(--ink);
+    }
+    /* Animated blood cells */
+    .cells { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+    .cell {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(192,21,42,0.25) 0%, transparent 70%);
+      animation: float-cell linear infinite;
+    }
+    @keyframes float-cell {
+      0%   { transform: translateY(110vh) scale(0.5); opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 0.6; }
+      100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+    }
+ 
+    .hero-eyebrow {
+      position: relative;
+      font-family: var(--font-ui);
+      font-size: 0.9rem; letter-spacing: 0.22em;
+      color: var(--blood-bright);
+      margin-bottom: 1.2rem;
+      display: flex; align-items: center; gap: 1rem;
+    }
+    .hero-eyebrow::before, .hero-eyebrow::after {
+      content: ''; flex: 1; max-width: 60px; height: 1px;
+      background: var(--blood);
+    }
+ 
+    .hero-headline {
+      position: relative;
+      font-family: var(--font-display);
+      font-size: clamp(3.5rem, 9vw, 8rem);
+      font-weight: 900; line-height: 0.9;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.5rem;
+    }
+    .hero-headline em {
+      font-style: italic; color: var(--blood-bright);
+      display: block;
+      text-shadow: 0 0 60px rgba(232,25,44,0.5);
+    }
+ 
+    .hero-sub {
+      position: relative;
+      font-size: 1.05rem; font-weight: 300;
+      color: var(--text-light); max-width: 520px;
+      line-height: 1.7; margin-bottom: 3rem;
+    }
+ 
+    .hero-actions {
+      position: relative;
+      display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center;
+    }
+ 
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.85rem 2rem; font-family: var(--font-body);
+      font-size: 0.82rem; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; text-decoration: none;
+      border-radius: 2px; border: none; cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary {
+      background: var(--blood);
+      color: var(--white);
+      box-shadow: 0 4px 24px rgba(192,21,42,0.4);
+    }
+    .btn-primary:hover { background: var(--blood-bright); box-shadow: 0 8px 32px rgba(232,25,44,0.5); }
+    .btn-outline {
+      background: transparent; color: var(--white);
+      border: 1px solid rgba(255,255,255,0.35);
+    }
+    .btn-outline:hover { border-color: var(--white); background: rgba(255,255,255,0.06); }
+    .btn-emergency {
+      background: transparent; color: var(--blood-bright);
+      border: 1px solid var(--blood);
+      position: relative; overflow: hidden;
+    }
+    .btn-emergency::before {
+      content: ''; position: absolute; inset: 0;
+      background: var(--blood); transform: translateX(-100%);
+      transition: transform 0.3s ease;
+    }
+    .btn-emergency:hover::before { transform: translateX(0); }
+    .btn-emergency span { position: relative; z-index: 1; }
+    .btn-emergency:hover { color: var(--white); }
+    .btn-ghost {
+      background: transparent; color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+    .btn-ghost:hover { color: var(--white); transform: none; }
+ 
+    /* ── TICKER ── */
+    .ticker-wrap {
+      background: var(--blood);
+      padding: 0.7rem 0;
+      overflow: hidden; white-space: nowrap;
+    }
+    .ticker-track {
+      display: inline-flex; gap: 0;
+      animation: ticker 22s linear infinite;
+    }
+    @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    .ticker-item {
+      font-family: var(--font-ui);
+      font-size: 0.85rem; letter-spacing: 0.15em;
+      padding: 0 2.5rem; color: var(--white);
+    }
+    .ticker-dot { color: rgba(255,255,255,0.4); margin-right: 2.5rem; }
+ 
+    /* ── STATS ── */
+    .stats-section {
+      background: var(--ash);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 5rem 4rem;
+    }
+    .stats-grid {
+      max-width: 1100px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+    }
+    .stat-card {
+      text-align: center; padding: 2rem;
+      border-right: 1px solid rgba(255,255,255,0.07);
+    }
+    .stat-card:last-child { border-right: none; }
+    .stat-number {
+      font-family: var(--font-display); font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 900; color: var(--blood-bright);
+      line-height: 1; margin-bottom: 0.5rem;
+    }
+    .stat-number span { font-size: 0.55em; vertical-align: super; }
+    .stat-label {
+      font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--text-muted); font-weight: 500;
+    }
+ 
+    /* ── BLOOD TYPES ── */
+    .types-section {
+      padding: 8rem 4rem;
+      background: var(--ink);
+    }
+    .section-label {
+      font-family: var(--font-ui); font-size: 0.82rem;
+      letter-spacing: 0.2em; color: var(--blood);
+      margin-bottom: 1rem;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 900; line-height: 1.05;
+      margin-bottom: 1.5rem;
+    }
+    .types-intro {
+      max-width: 1100px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 5rem; align-items: end;
+      margin-bottom: 4rem;
+    }
+    .types-subtitle {
+      font-size: 1rem; color: var(--text-muted);
+      line-height: 1.7; font-weight: 300;
+    }
+    .types-grid {
+      max-width: 1100px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+    .type-card {
+      background: var(--ash);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 4px; padding: 2rem 1.5rem;
+      text-align: center;
+      position: relative; overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+    }
+    .type-card::before {
+      content: ''; position: absolute;
+      bottom: 0; left: 0; right: 0; height: 3px;
+      background: var(--blood);
+      transform: scaleX(0); transition: transform 0.3s;
+    }
+    .type-card:hover { transform: translateY(-6px); border-color: rgba(192,21,42,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+    .type-card:hover::before { transform: scaleX(1); }
+    .type-letter {
+      font-family: var(--font-display); font-size: 3.5rem; font-weight: 900;
+      color: var(--blood-bright); line-height: 1;
+      margin-bottom: 0.3rem;
+    }
+    .type-rh { font-size: 1.5rem; color: var(--text-muted); }
+    .type-name { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1rem; }
+    .type-bar-wrap { height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; margin-bottom: 0.6rem; overflow: hidden; }
+    .type-bar { height: 100%; background: var(--blood); border-radius: 2px; transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
+    .type-pct { font-size: 0.72rem; color: var(--text-muted); }
+    .type-badge {
+      position: absolute; top: 0.8rem; right: 0.8rem;
+      background: var(--blood); color: var(--white);
+      font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 0.2rem 0.5rem; border-radius: 1px;
+    }
+ 
+    /* ── HOW IT WORKS ── */
+    .how-section {
+      background: var(--ash);
+      padding: 8rem 4rem;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .how-inner { max-width: 1100px; margin: 0 auto; }
+    .how-header { text-align: center; margin-bottom: 5rem; }
+    .how-steps {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1px; background: rgba(255,255,255,0.06);
+    }
+    .how-step {
+      background: var(--ash);
+      padding: 3rem 2.5rem;
+      position: relative;
+      transition: background 0.3s;
+    }
+    .how-step:hover { background: var(--charcoal); }
+    .step-number {
+      font-family: var(--font-ui); font-size: 5rem;
+      color: rgba(192,21,42,0.15); line-height: 1;
+      margin-bottom: 1.5rem;
+      transition: color 0.3s;
+    }
+    .how-step:hover .step-number { color: rgba(192,21,42,0.35); }
+    .step-icon {
+      width: 48px; height: 48px; background: var(--blood);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; margin-bottom: 1.5rem;
+    }
+    .step-title {
+      font-family: var(--font-display); font-size: 1.5rem; font-weight: 700;
+      margin-bottom: 0.8rem;
+    }
+    .step-desc { font-size: 0.9rem; color: var(--text-muted); line-height: 1.7; font-weight: 300; }
+ 
+    /* ── EMERGENCY ── */
+    .emergency-section {
+      background: var(--blood-deep);
+      padding: 6rem 4rem;
+      position: relative; overflow: hidden;
+    }
+    .emergency-section::before {
+      content: 'EMERGENCY';
+      position: absolute; right: -2rem; top: 50%; transform: translateY(-50%) rotate(90deg);
+      font-family: var(--font-ui); font-size: 8rem; letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.04); pointer-events: none;
+    }
+    .emergency-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr auto;
+      gap: 4rem; align-items: center;
+    }
+    .emergency-inner .section-title { color: var(--white); margin-bottom: 1rem; }
+    .emergency-desc { font-size: 1rem; color: rgba(255,255,255,0.7); line-height: 1.7; font-weight: 300; }
+    .emergency-actions { display: flex; flex-direction: column; gap: 1rem; align-items: stretch; }
+    .btn-white {
+      background: var(--white); color: var(--blood-deep);
+      font-weight: 700;
+    }
+    .btn-white:hover { background: var(--fog); transform: translateY(-2px); }
+    .btn-outline-white {
+      background: transparent; color: var(--white);
+      border: 1px solid rgba(255,255,255,0.5);
+    }
+    .btn-outline-white:hover { border-color: var(--white); background: rgba(255,255,255,0.1); }
+ 
+    /* ── FEATURES ── */
+    .features-section {
+      padding: 8rem 4rem;
+      background: var(--ink);
+    }
+    .features-inner { max-width: 1100px; margin: 0 auto; }
+    .features-header {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 4rem; align-items: end; margin-bottom: 5rem;
+    }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 1px; background: rgba(255,255,255,0.06);
+    }
+    .feature-card {
+      background: var(--ink); padding: 3rem;
+      position: relative; overflow: hidden;
+      transition: background 0.3s;
+    }
+    .feature-card:hover { background: var(--ash); }
+    .feature-icon {
+      font-size: 1.8rem; color: var(--blood-bright);
+      margin-bottom: 1.5rem;
+    }
+    .feature-title {
+      font-family: var(--font-display); font-size: 1.4rem; font-weight: 700;
+      margin-bottom: 0.8rem;
+    }
+    .feature-desc { font-size: 0.9rem; color: var(--text-muted); line-height: 1.7; font-weight: 300; }
+    .feature-arrow {
+      position: absolute; bottom: 2rem; right: 2rem;
+      color: rgba(255,255,255,0.15); font-size: 1.2rem;
+      transition: color 0.2s, transform 0.2s;
+    }
+    .feature-card:hover .feature-arrow { color: var(--blood-bright); transform: translate(3px, -3px); }
+ 
+    /* ── AI SECTION ── */
+    .ai-section {
+      background: var(--ash);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 8rem 4rem;
+    }
+    .ai-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 6rem; align-items: center;
+    }
+    .ai-visual {
+      background: var(--charcoal);
+      border: 1px solid rgba(192,21,42,0.2);
+      border-radius: 8px; padding: 2.5rem;
+      position: relative;
+    }
+    .ai-visual-header {
+      display: flex; align-items: center; gap: 0.6rem;
+      margin-bottom: 2rem;
+    }
+    .ai-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .ai-dot:nth-child(1) { background: #FF5F57; }
+    .ai-dot:nth-child(2) { background: #FEBC2E; }
+    .ai-dot:nth-child(3) { background: #28C840; }
+    .ai-question {
+      font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.6rem;
+    }
+    .ai-answer {
+      font-family: var(--font-display); font-size: 1.1rem; color: var(--white);
+      margin-bottom: 1.5rem; font-weight: 700;
+    }
+    .ai-bar-label {
+      display: flex; justify-content: space-between;
+      font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.3rem;
+    }
+    .ai-bar-wrap { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; margin-bottom: 1.2rem; overflow: hidden; }
+    .ai-bar { height: 100%; border-radius: 3px; }
+    .ai-bar.green { background: #28C840; width: 88%; }
+    .ai-bar.yellow { background: #FEBC2E; width: 45%; }
+    .ai-bar.red { background: var(--blood-bright); width: 10%; }
+    .ai-result {
+      background: rgba(192,21,42,0.1); border: 1px solid rgba(192,21,42,0.3);
+      border-radius: 4px; padding: 1rem;
+      font-size: 0.85rem; color: var(--blood-bright);
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+ 
+    /* ── FOOTER ── */
+    footer {
+      background: var(--ink);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 5rem 4rem 2rem;
+    }
+    .footer-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr;
+      gap: 4rem; margin-bottom: 4rem;
+    }
+    .footer-brand .nav-logo { font-size: 1.8rem; margin-bottom: 1rem; display: flex; }
+    .footer-brand p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.7; max-width: 260px; }
+    .footer-col h4 {
+      font-family: var(--font-ui); font-size: 0.85rem; letter-spacing: 0.15em;
+      color: var(--text-muted); margin-bottom: 1.5rem;
+    }
+    .footer-col ul { list-style: none; }
+    .footer-col ul li { margin-bottom: 0.7rem; }
+    .footer-col ul a {
+      font-size: 0.88rem; color: var(--text-light);
+      text-decoration: none; transition: color 0.2s;
+    }
+    .footer-col ul a:hover { color: var(--white); }
+    .footer-contact p {
+      font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.7rem;
+      display: flex; align-items: center; gap: 0.7rem;
+    }
+    .footer-contact p i { color: var(--blood); }
+    .footer-bottom {
+      max-width: 1100px; margin: 0 auto;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding-top: 2rem;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .footer-bottom p { font-size: 0.78rem; color: var(--text-muted); }
+ 
+    /* ── SCROLL REVEAL ── */
+    .reveal {
+      opacity: 0; transform: translateY(40px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .reveal.visible {
+      opacity: 1; transform: translateY(0);
+    }
+
+    /* ── CHATBOT WIDGET ── */
+    .chatbot-widget {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 1000;
+      font-family: var(--font-body);
+    }
+    .chatbot-toggle {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--blood);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(192,21,42,0.5);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .chatbot-toggle:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 28px rgba(192,21,42,0.6);
+    }
+    .chatbot-toggle i {
+      font-size: 1.5rem;
+      color: var(--white);
+    }
+    .chatbot-window {
+      position: absolute;
+      bottom: 80px;
+      right: 0;
+      width: 380px;
+      max-height: 500px;
+      background: var(--charcoal);
+      border: 1px solid rgba(192,21,42,0.3);
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .chatbot-window.open {
+      display: flex;
+    }
+    .chatbot-header {
+      background: var(--blood);
+      padding: 1rem 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+    .chatbot-avatar {
+      width: 40px;
+      height: 40px;
+      background: var(--white);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .chatbot-avatar i {
+      color: var(--blood);
+      font-size: 1.2rem;
+    }
+    .chatbot-info h4 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 0.2rem;
+    }
+    .chatbot-info span {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.8);
+    }
+    .chatbot-close {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: var(--white);
+      cursor: pointer;
+      font-size: 1.2rem;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+    .chatbot-close:hover {
+      opacity: 1;
+    }
+    .chatbot-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      max-height: 320px;
+      background: var(--ash);
+    }
+    .chatbot-message {
+      margin-bottom: 1rem;
+      display: flex;
+      gap: 0.8rem;
+    }
+    .chatbot-message.bot {
+      flex-direction: row;
+    }
+    .chatbot-message.user {
+      flex-direction: row-reverse;
+    }
+    .message-bubble {
+      max-width: 80%;
+      padding: 0.8rem 1rem;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+    .bot .message-bubble {
+      background: var(--charcoal);
+      color: var(--white);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .user .message-bubble {
+      background: var(--blood);
+      color: var(--white);
+    }
+    .message-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .bot .message-avatar {
+      background: var(--blood);
+    }
+    .user .message-avatar {
+      background: var(--text-muted);
+    }
+    .message-avatar i {
+      font-size: 0.9rem;
+      color: var(--white);
+    }
+    .chatbot-input-area {
+      padding: 1rem;
+      background: var(--charcoal);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      gap: 0.8rem;
+    }
+    .chatbot-input {
+      flex: 1;
+      background: var(--ash);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      color: var(--white);
+      font-size: 0.85rem;
+      font-family: var(--font-body);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .chatbot-input:focus {
+      border-color: var(--blood);
+    }
+    .chatbot-input::placeholder {
+      color: var(--text-muted);
+    }
+    .chatbot-send {
+      width: 40px;
+      height: 40px;
+      background: var(--blood);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .chatbot-send:hover {
+      background: var(--blood-bright);
+    }
+    .chatbot-send i {
+      color: var(--white);
+      font-size: 0.9rem;
+    }
+    .chatbot-quick-actions {
+      padding: 0.5rem 1rem;
+      background: var(--ash);
+      border-top: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .quick-action-btn {
+      background: transparent;
+      border: 1px solid rgba(192,21,42,0.3);
+      color: var(--text-light);
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .quick-action-btn:hover {
+      background: var(--blood);
+      color: var(--white);
+      border-color: var(--blood);
+    }
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      padding: 0.5rem 0.8rem;
+    }
+    .typing-indicator span {
+      width: 8px;
+      height: 8px;
+      background: var(--text-muted);
+      border-radius: 50%;
+      animation: typing 1.4s infinite;
+    }
+    .typing-indicator span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    .typing-indicator span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+    @keyframes typing {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-8px); }
+    }
+ 
+    /* ── MOBILE ── */
+    @media (max-width: 900px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      .nav-links.open {
+        display: flex; flex-direction: column;
+        position: fixed; inset: 0; background: var(--ink);
+        justify-content: center; align-items: center; gap: 2rem; z-index: 99;
+      }
+      .nav-links.open a { font-size: 1.2rem; }
+      .hamburger { display: flex; position: relative; z-index: 100; }
+ 
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .stat-card { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.07); }
+      .types-intro { grid-template-columns: 1fr; gap: 1.5rem; }
+      .types-grid { grid-template-columns: repeat(2, 1fr); }
+      .how-steps { grid-template-columns: 1fr; }
+      .emergency-inner { grid-template-columns: 1fr; }
+      .features-header { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: 1fr; }
+      .ai-inner { grid-template-columns: 1fr; }
+      .footer-inner { grid-template-columns: 1fr 1fr; gap: 2.5rem; }
+      .footer-bottom { flex-direction: column; gap: 1rem; text-align: center; }
+      .stats-section { padding: 4rem 1.5rem; }
+      .types-section, .how-section, .ai-section, .features-section, .emergency-section, footer { padding-left: 1.5rem; padding-right: 1.5rem; }
+    }
+    @media (max-width: 540px) {
+      .types-grid { grid-template-columns: repeat(2, 1fr); }
+      .footer-inner { grid-template-columns: 1fr; }
+      .chatbot-window {
+        width: 320px;
+        right: -1rem;
+      }
+      .chatbot-widget {
+        bottom: 1.5rem;
+        right: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+ 
+  <!-- NAV -->
+  <nav id="mainNav">
+    <a href="index.html" class="nav-logo">
+      <i class="fas fa-droplet drop"></i> BloodMate
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="donor-registration.html">Donate</a></li>
+      <li><a href="recipient-request.html">Request</a></li>
+      <li><a href="blood-inventory.html">Inventory</a></li>
+      <li><a href="ai-eligibility.html">AI Eligibility</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="database/emergency.html" class="btn-nav-emergency">🚨 Emergency</a></li>
+      <li><a href="auth.html" class="btn-nav-auth">Login</a></li>
+      <li><a href="admin/login.html" class="btn-nav-auth">Admin</a></li>
+    </ul>
+    <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+      <span></span><span></span><span></span>
+    </div>
+  </nav>
+ 
+  <!-- BLOOD CELLS BG -->
+  <div class="cells" id="cells"></div>
+ 
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-eyebrow">BLOOD DONATION MANAGEMENT SYSTEM</div>
+    <h1 class="hero-headline">
+      Every Drop<br/>
+      <em>Saves a Life</em>
+    </h1>
+    <p class="hero-sub">
+      BloodMate connects donors with recipients across your community — fast, safe, and life-changing.
+    </p>
+    <div class="hero-actions">
+      <a href="donor-registration.html" class="btn btn-primary">
+        <i class="fas fa-heart"></i> Become a Donor
+      </a>
+      <a href="recipient-request.html" class="btn btn-outline">
+        <i class="fas fa-tint"></i> Request Blood
+      </a>
+      <a href="database/emergency.html" class="btn btn-emergency">
+        <span><i class="fas fa-ambulance"></i> Emergency</span>
+      </a>
+    </div>
+  </section>
+ 
+  <!-- TICKER -->
+  <div class="ticker-wrap">
+    <div class="ticker-track">
+      <span class="ticker-item">O Negative — Universal Donor</span><span class="ticker-dot">●</span>
+      <span class="ticker-item">AB Positive — Universal Recipient</span><span class="ticker-dot">●</span>
+      <span class="ticker-item">Every 2 seconds someone needs blood</span><span class="ticker-dot">●</span>
+      <span class="ticker-item">One donation can save up to 3 lives</span><span class="ticker-dot">●</span>
+      <span class="ticker-item">24/7 Emergency helpline available</span><span class="ticker-dot">●</span>
+      <span class="ticker-item">O Negative — Universal Donor</span><span class="ticker-dot">●</span>
+      <span class="ticker-item">AB Positive — Universal Recipient</span><span class="ticker-dot">●</span>
+      <span class="ticker-item">Every 2 seconds someone needs blood</span><span class="ticker-dot">●</span>
+      <span class="ticker-item">One donation can save up to 3 lives</span><span class="ticker-dot">●</span>
+      <span class="ticker-item">24/7 Emergency helpline available</span><span class="ticker-dot">●</span>
+    </div>
+  </div>
+ 
+  <!-- STATS -->
+  <section class="stats-section">
+    <div class="stats-grid">
+      <div class="stat-card reveal">
+        <div class="stat-number" data-target="12800">0</div>
+        <div class="stat-label">Registered Donors</div>
+      </div>
+      <div class="stat-card reveal" style="transition-delay:0.1s">
+        <div class="stat-number" data-target="4200">0</div>
+        <div class="stat-label">Requests Fulfilled</div>
+      </div>
+      <div class="stat-card reveal" style="transition-delay:0.2s">
+        <div class="stat-number" data-target="9600">0</div>
+        <div class="stat-label">Units Available</div>
+      </div>
+      <div class="stat-card reveal" style="transition-delay:0.3s">
+        <div class="stat-number" data-target="3100">0</div>
+        <div class="stat-label">Lives Saved</div>
+      </div>
+    </div>
+  </section>
+ 
+  <!-- BLOOD TYPES -->
+  <section class="types-section">
+    <div style="max-width:1100px;margin:0 auto;">
+      <div class="types-intro reveal">
+        <div>
+          <div class="section-label">Blood Types</div>
+          <h2 class="section-title">Find Your<br/>Blood Type</h2>
+        </div>
+        <p class="types-subtitle">
+          We maintain real-time inventory across all eight blood types. Check availability instantly and request a match.
+        </p>
+      </div>
+      <div class="types-grid">
+        <div class="type-card reveal">
+          <div class="type-badge">In Demand</div>
+          <div class="type-letter">A<span class="type-rh">+</span></div>
+          <div class="type-name">A Positive</div>
+          <div class="type-bar-wrap"><div class="type-bar" data-w="72"></div></div>
+          <div class="type-pct">72 units available</div>
+        </div>
+        <div class="type-card reveal" style="transition-delay:0.05s">
+          <div class="type-letter">A<span class="type-rh">−</span></div>
+          <div class="type-name">A Negative</div>
+          <div class="type-bar-wrap"><div class="type-bar" data-w="28"></div></div>
+          <div class="type-pct">28 units available</div>
+        </div>
+        <div class="type-card reveal" style="transition-delay:0.1s">
+          <div class="type-letter">B<span class="type-rh">+</span></div>
+          <div class="type-name">B Positive</div>
+          <div class="type-bar-wrap"><div class="type-bar" data-w="55"></div></div>
+          <div class="type-pct">55 units available</div>
+        </div>
+        <div class="type-card reveal" style="transition-delay:0.15s">
+          <div class="type-letter">B<span class="type-rh">−</span></div>
+          <div class="type-name">B Negative</div>
+          <div class="type-bar-wrap"><div class="type-bar" data-w="18"></div></div>
+          <div class="type-pct">18 units available</div>
+        </div>
+        <div class="type-card reveal" style="transition-delay:0.2s">
+          <div class="type-badge">Universal</div>
+          <div class="type-letter">O<span class="type-rh">+</span></div>
+          <div class="type-name">O Positive</div>
+          <div class="type-bar-wrap"><div class="type-bar" data-w="88"></div></div>
+          <div class="type-pct">88 units available</div>
+        </div>
+        <div class="type-card reveal" style="transition-delay:0.25s">
+          <div class="type-badge">Critical</div>
+          <div class="type-letter">O<span class="type-rh">−</span></div>
+          <div class="type-name">O Negative</div>
+          <div class="type-bar-wrap"><div class="type-bar" data-w="12"></div></div>
+          <div class="type-pct">12 units available</div>
+        </div>
+        <div class="type-card reveal" style="transition-delay:0.3s">
+          <div class="type-letter">AB<span class="type-rh">+</span></div>
+          <div class="type-name">AB Positive</div>
+          <div class="type-bar-wrap"><div class="type-bar" data-w="44"></div></div>
+          <div class="type-pct">44 units available</div>
+        </div>
+        <div class="type-card reveal" style="transition-delay:0.35s">
+          <div class="type-letter">AB<span class="type-rh">−</span></div>
+          <div class="type-name">AB Negative</div>
+          <div class="type-bar-wrap"><div class="type-bar" data-w="9"></div></div>
+          <div class="type-pct">9 units available</div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:3rem;" class="reveal">
+        <a href="blood-inventory.html" class="btn btn-outline">View Full Inventory →</a>
+      </div>
+    </div>
+  </section>
+ 
+  <!-- HOW IT WORKS -->
+  <section class="how-section">
+    <div class="how-inner">
+      <div class="how-header reveal">
+        <div class="section-label">How It Works</div>
+        <h2 class="section-title">Simple. Fast.<br/><em style="color:var(--blood-bright)">Life-saving.</em></h2>
+      </div>
+      <div class="how-steps">
+        <div class="how-step reveal">
+          <div class="step-number">01</div>
+          <div class="step-icon"><i class="fas fa-user-plus"></i></div>
+          <h3 class="step-title">Register</h3>
+          <p class="step-desc">Create your donor profile in under 3 minutes. We keep your info secure and private.</p>
+        </div>
+        <div class="how-step reveal" style="transition-delay:0.15s">
+          <div class="step-number">02</div>
+          <div class="step-icon"><i class="fas fa-search"></i></div>
+          <h3 class="step-title">Match</h3>
+          <p class="step-desc">Our system instantly matches donors with recipients based on blood type, location, and urgency.</p>
+        </div>
+        <div class="how-step reveal" style="transition-delay:0.3s">
+          <div class="step-number">03</div>
+          <div class="step-icon"><i class="fas fa-heart"></i></div>
+          <h3 class="step-title">Save Lives</h3>
+          <p class="step-desc">Donate at a partner hospital or blood bank. One donation can save up to three lives.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+ 
+  <!-- EMERGENCY -->
+  <section class="emergency-section">
+    <div class="emergency-inner">
+      <div class="reveal">
+        <div class="section-label" style="color:rgba(255,255,255,0.5)">24 / 7 Support</div>
+        <h2 class="section-title">Need Blood<br/>Right Now?</h2>
+        <p class="emergency-desc">
+          Our emergency response team is on standby around the clock. Don't wait — every second counts when lives are on the line.
+        </p>
+      </div>
+      <div class="emergency-actions reveal">
+        <a href="tel:+911234567890" class="btn btn-white" style="justify-content:center">
+          <i class="fas fa-phone"></i> Call +91 123 456 7890
+        </a>
+        <a href="database/emergency.html" class="btn btn-outline-white" style="justify-content:center">
+          <i class="fas fa-ambulance"></i> Emergency Portal
+        </a>
+      </div>
+    </div>
+  </section>
+ 
+  <!-- FEATURES -->
+  <section class="features-section">
+    <div class="features-inner">
+      <div class="features-header reveal">
+        <div>
+          <div class="section-label">Why BloodMate</div>
+          <h2 class="section-title">Built for<br/>people who<br/>need it most.</h2>
+        </div>
+        <p style="font-size:1rem;color:var(--text-muted);line-height:1.7;font-weight:300;">
+          We built BloodMate because blood banks deserve better software — and patients deserve faster answers.
+        </p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+          <h3 class="feature-title">Instant Matching</h3>
+          <p class="feature-desc">Algorithm-driven blood type matching that connects the right donor to the right recipient within minutes.</p>
+          <i class="fas fa-arrow-up-right feature-arrow"></i>
+        </div>
+        <div class="feature-card reveal" style="transition-delay:0.1s">
+          <div class="feature-icon"><i class="fas fa-hospital"></i></div>
+          <h3 class="feature-title">Hospital Network</h3>
+          <p class="feature-desc">Integrated with a network of hospitals, clinics, and blood banks for seamless real-time coordination.</p>
+          <i class="fas fa-arrow-up-right feature-arrow"></i>
+        </div>
+        <div class="feature-card reveal" style="transition-delay:0.2s">
+          <div class="feature-icon"><i class="fas fa-shield-halved"></i></div>
+          <h3 class="feature-title">Fully Secure</h3>
+          <p class="feature-desc">Your health data stays private. End-to-end encrypted profiles with role-based access control.</p>
+          <i class="fas fa-arrow-up-right feature-arrow"></i>
+        </div>
+        <div class="feature-card reveal" style="transition-delay:0.3s">
+          <div class="feature-icon"><i class="fas fa-chart-bar"></i></div>
+          <h3 class="feature-title">Live Inventory</h3>
+          <p class="feature-desc">Real-time blood bank inventory tracking so administrators always know exactly what's available.</p>
+          <i class="fas fa-arrow-up-right feature-arrow"></i>
+        </div>
+      </div>
+    </div>
+  </section>
+ 
+  <!-- AI SECTION -->
+  <section class="ai-section">
+    <div class="ai-inner">
+      <div class="reveal">
+        <div class="section-label">AI-Powered</div>
+        <h2 class="section-title">Check Your<br/>Eligibility<br/><em style="color:var(--blood-bright)">Instantly.</em></h2>
+        <p style="font-size:1rem;color:var(--text-muted);line-height:1.7;font-weight:300;margin-bottom:2rem;">
+          Answer a few questions and our AI will tell you if you're eligible to donate — no clinic visit required to check.
+        </p>
+        <a href="ai-eligibility.html" class="btn btn-primary">
+          <i class="fas fa-robot"></i> Try AI Eligibility Test
+        </a>
+      </div>
+      <div class="ai-visual reveal" style="transition-delay:0.2s">
+        <div class="ai-visual-header">
+          <div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div>
+          <span style="font-size:0.72rem;color:var(--text-muted);margin-left:0.5rem;">BloodMate AI Eligibility</span>
+        </div>
+        <div class="ai-question">Age range?</div>
+        <div class="ai-answer">18–65 years ✓</div>
+        <div class="ai-bar-label"><span>Overall Eligibility Score</span><span>88%</span></div>
+        <div class="ai-bar-wrap"><div class="ai-bar green"></div></div>
+        <div class="ai-bar-label"><span>Health factors</span><span>45%</span></div>
+        <div class="ai-bar-wrap"><div class="ai-bar yellow"></div></div>
+        <div class="ai-bar-label"><span>Deferral risk</span><span>10%</span></div>
+        <div class="ai-bar-wrap"><div class="ai-bar red"></div></div>
+        <div class="ai-result">
+          <i class="fas fa-check-circle"></i>
+          <span>You are likely eligible to donate. Schedule now.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+ 
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-logo"><i class="fas fa-droplet drop"></i> BloodMate</a>
+        <p>Connecting hearts and saving lives through smarter blood donation management.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Donors</h4>
+        <ul>
+          <li><a href="donor-registration.html">Register</a></li>
+          <li><a href="ai-eligibility.html">Eligibility Check</a></li>
+          <li><a href="blood-inventory.html">Inventory</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Recipients</h4>
+        <ul>
+          <li><a href="recipient-request.html">Request Blood</a></li>
+          <li><a href="database/emergency.html">Emergency</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-contact">
+        <h4>Contact</h4>
+        <p><i class="fas fa-phone"></i> +91 123 456 7890</p>
+        <p><i class="fas fa-envelope"></i> info@bloodmate.com</p>
+        <p><i class="fas fa-location-dot"></i> 123 Healthcare Street, Medical City</p>
+        <div style="margin-top:1.5rem;">
+          <a href="admin/login.html" class="btn btn-outline" style="font-size:0.72rem;padding:0.5rem 1rem;">Admin Panel →</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 BloodMate. All rights reserved.</p>
+      <p style="color:var(--blood);font-family:var(--font-display);font-style:italic;">Save Lives. Donate Blood.</p>
+    </div>
+  </footer>
+
+  <!-- CHATBOT WIDGET -->
+  <div class="chatbot-widget">
+    <div class="chatbot-window" id="chatbotWindow">
+      <div class="chatbot-header">
+        <div class="chatbot-avatar">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="chatbot-info">
+          <h4>BloodMate Assistant</h4>
+          <span>Online • Here to help</span>
+        </div>
+        <button class="chatbot-close" onclick="toggleChatbot()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="chatbot-messages" id="chatbotMessages">
+        <div class="chatbot-message bot">
+          <div class="message-avatar">
+            <i class="fas fa-robot"></i>
+          </div>
+          <div class="message-bubble">
+            Hello! 👋 I'm your BloodMate Assistant. I can help you with:
+            <br><br>
+            • Blood donation eligibility<br>
+            • Finding nearby donation centers<br>
+            • Blood type information<br>
+            • Emergency blood requests<br>
+            • General questions about BloodMate
+            <br><br>
+            How can I assist you today?
+          </div>
+        </div>
+      </div>
+      <div class="chatbot-quick-actions">
+        <button class="quick-action-btn" onclick="sendQuickMessage('Am I eligible to donate?')">Eligibility</button>
+        <button class="quick-action-btn" onclick="sendQuickMessage('Where can I donate?')">Donate Centers</button>
+        <button class="quick-action-btn" onclick="sendQuickMessage('Blood type compatibility')">Blood Types</button>
+        <button class="quick-action-btn" onclick="sendQuickMessage('Emergency blood request')">Emergency</button>
+      </div>
+      <div class="chatbot-input-area">
+        <input type="text" class="chatbot-input" id="chatbotInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+        <button class="chatbot-send" onclick="sendMessage()">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+    <button class="chatbot-toggle" onclick="toggleChatbot()">
+      <i class="fas fa-comment-dots"></i>
+    </button>
+  </div>
+
+  <script>
+    // NAV scroll
+    const nav = document.getElementById('mainNav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 60);
+    });
+ 
+    // Hamburger
+    function toggleMenu() {
+      document.getElementById('navLinks').classList.toggle('open');
+    }
+ 
+    // Floating blood cells
+    const cellsEl = document.getElementById('cells');
+    for (let i = 0; i < 18; i++) {
+      const c = document.createElement('div');
+      c.className = 'cell';
+      const size = 40 + Math.random() * 120;
+      c.style.cssText = `
+        width:${size}px; height:${size}px;
+        left:${Math.random()*100}%;
+        animation-duration:${10 + Math.random()*20}s;
+        animation-delay:${Math.random()*-20}s;
+      `;
+      cellsEl.appendChild(c);
+    }
+ 
+    // Scroll reveal
+    const reveals = document.querySelectorAll('.reveal');
+    const revealObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.12 });
+    reveals.forEach(el => revealObs.observe(el));
+ 
+    // Count-up animation
+    function countUp(el, target) {
+      const dur = 2000; const start = performance.now();
+      function update(now) {
+        const t = Math.min((now - start) / dur, 1);
+        const ease = 1 - Math.pow(1 - t, 3);
+        el.textContent = Math.round(ease * target).toLocaleString();
+        if (t < 1) requestAnimationFrame(update);
+      }
+      requestAnimationFrame(update);
+    }
+    const statNums = document.querySelectorAll('.stat-number[data-target]');
+    const statObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          countUp(e.target, parseInt(e.target.dataset.target));
+          statObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    statNums.forEach(el => statObs.observe(el));
+ 
+    // Blood type bars animate on scroll
+    const bars = document.querySelectorAll('.type-bar[data-w]');
+    const barObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const pct = parseInt(e.target.dataset.w);
+          e.target.style.width = pct + '%';
+          barObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    bars.forEach(b => { b.style.width = '0'; barObs.observe(b); });
+
+    // Chatbot functionality
+    function toggleChatbot() {
+      const window = document.getElementById('chatbotWindow');
+      window.classList.toggle('open');
+      if (window.classList.contains('open')) {
+        document.getElementById('chatbotInput').focus();
+      }
+    }
+
+    function handleKeyPress(event) {
+      if (event.key === 'Enter') {
+        sendMessage();
+      }
+    }
+
+    function sendQuickMessage(message) {
+      document.getElementById('chatbotInput').value = message;
+      sendMessage();
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('chatbotInput');
+      const message = input.value.trim();
+      if (!message) return;
+
+      // Add user message
+      addMessage(message, 'user');
+      input.value = '';
+
+      // Show typing indicator
+      showTypingIndicator();
+
+      // Call real API
+      fetch('/api/chatbot.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: message,
+          history: getConversationHistory()
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        removeTypingIndicator();
+        if (data.success) {
+          addMessage(data.response, 'bot');
+        } else {
+          addMessage('Sorry, I encountered an error. Please try again.', 'bot');
+        }
+      })
+      .catch(error => {
+        removeTypingIndicator();
+        // Fallback to rule-based response on error
+        const fallbackResponse = generateBotResponse(message);
+        addMessage(fallbackResponse, 'bot');
+      });
+    }
+
+    function getConversationHistory() {
+      const messages = document.querySelectorAll('.chatbot-message');
+      const history = [];
+      
+      messages.forEach(msg => {
+        const role = msg.classList.contains('bot') ? 'assistant' : 'user';
+        const text = msg.querySelector('.message-bubble').innerText;
+        history.push({ role, content: text });
+      });
+      
+      return history;
+    }
+
+    function addMessage(text, sender) {
+      const messagesContainer = document.getElementById('chatbotMessages');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `chatbot-message ${sender}`;
+      
+      const avatar = document.createElement('div');
+      avatar.className = 'message-avatar';
+      avatar.innerHTML = sender === 'bot' ? '<i class="fas fa-robot"></i>' : '<i class="fas fa-user"></i>';
+      
+      const bubble = document.createElement('div');
+      bubble.className = 'message-bubble';
+      bubble.innerHTML = text;
+      
+      messageDiv.appendChild(avatar);
+      messageDiv.appendChild(bubble);
+      messagesContainer.appendChild(messageDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function showTypingIndicator() {
+      const messagesContainer = document.getElementById('chatbotMessages');
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'chatbot-message bot';
+      typingDiv.id = 'typingIndicator';
+      typingDiv.innerHTML = `
+        <div class="message-avatar"><i class="fas fa-robot"></i></div>
+        <div class="message-bubble">
+          <div class="typing-indicator">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      `;
+      messagesContainer.appendChild(typingDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function removeTypingIndicator() {
+      const typingIndicator = document.getElementById('typingIndicator');
+      if (typingIndicator) {
+        typingIndicator.remove();
+      }
+    }
+
+    function generateBotResponse(message) {
+      const lowerMessage = message.toLowerCase();
+      
+      if (lowerMessage.includes('eligible') || lowerMessage.includes('eligibility')) {
+        return 'To be eligible to donate blood, you must:<br><br>• Be between 18-65 years old<br>• Weigh at least 50 kg (110 lbs)<br>• Be in good general health<br>• Not have donated blood in the last 3 months<br><br>For a detailed eligibility check, try our <a href="ai-eligibility.html" style="color:var(--blood-bright)">AI Eligibility Test</a>.';
+      }
+      
+      if (lowerMessage.includes('donate') && (lowerMessage.includes('where') || lowerMessage.includes('center'))) {
+        return 'You can donate blood at:<br><br>• Registered blood banks in your area<br>• Partner hospitals<br>• Mobile blood donation camps<br><br>Check our <a href="blood-inventory.html" style="color:var(--blood-bright)">Blood Inventory</a> page to find available centers near you.';
+      }
+      
+      if (lowerMessage.includes('blood type') || lowerMessage.includes('compatibility')) {
+        return 'Blood type compatibility:<br><br>• <strong>O-</strong> can donate to everyone (universal donor)<br>• <strong>AB+</strong> can receive from everyone (universal recipient)<br>• <strong>A+</strong> can donate to A+ and AB+<br>• <strong>B+</strong> can donate to B+ and AB+<br><br>View our <a href="blood-inventory.html" style="color:var(--blood-bright)">Blood Types</a> section for more details.';
+      }
+      
+      if (lowerMessage.includes('emergency')) {
+        return 'For emergency blood requests:<br><br>🚨 Call our 24/7 helpline: +91 123 456 7890<br>🚨 Visit our <a href="database/emergency.html" style="color:var(--blood-bright)">Emergency Portal</a><br>🚨 Contact nearest hospital directly<br><br>Every second counts in emergencies!';
+      }
+      
+      if (lowerMessage.includes('register') || lowerMessage.includes('sign up')) {
+        return 'To register as a donor:<br><br>1. Visit our <a href="donor-registration.html" style="color:var(--blood-bright)">Donor Registration</a> page<br>2. Fill in your details<br>3. Complete health questionnaire<br>4. Get verified and start saving lives!<br><br>Registration takes less than 3 minutes.';
+      }
+      
+      if (lowerMessage.includes('request') || lowerMessage.includes('need blood')) {
+        return 'To request blood:<br><br>• Use our <a href="recipient-request.html" style="color:var(--blood-bright)">Blood Request</a> form<br>• Provide patient details and blood type<br>• Our system will match you with donors<br>• For urgent needs, use emergency services<br><br>We prioritize critical cases.';
+      }
+      
+      if (lowerMessage.includes('contact') || lowerMessage.includes('help') || lowerMessage.includes('support')) {
+        return 'Contact BloodMate:<br><br>📞 Phone: +91 123 456 7890<br>📧 Email: info@bloodmate.com<br>📍 Address: 123 Healthcare Street, Medical City<br><br>Or visit our <a href="contact.html" style="color:var(--blood-bright)">Contact Page</a> for more options.';
+      }
+      
+      // Default response
+      return 'I\'m here to help! You can ask me about:<br><br>• Blood donation eligibility<br>• Where to donate blood<br>• Blood type compatibility<br>• Emergency blood requests<br>• How to register as a donor<br>• How to request blood<br><br>What would you like to know?';
+    }
+  </script>
+</body>
+</html>
+ 

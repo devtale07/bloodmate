@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blood Inventory — BloodMate</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blood:      #C0152A;
+      --blood-deep: #8B0000;
+      --blood-bright:#E8192C;
+      --ink:        #0D0D0D;
+      --ash:        #1A1A1A;
+      --charcoal:   #2A2A2A;
+      --text-muted: #999;
+      --text-light: #CCCCCC;
+      --white:      #FFFFFF;
+      --green:      #28C840;
+      --yellow:     #FEBC2E;
+      --orange:     #FF8A3D;
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-ui:    'Bebas Neue', sans-serif;
+      --font-body:  'Inter', system-ui, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+    body { background: var(--ink); color: var(--white); font-family: var(--font-body); overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--ink); }
+    ::-webkit-scrollbar-thumb { background: var(--blood); border-radius: 2px; }
+
+    /* ── NAV (shared) ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 4rem;
+      background: rgba(13,13,13,0.92); backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(192,21,42,0.18);
+    }
+    .nav-logo {
+      font-family: var(--font-display); font-size: 1.5rem; font-weight: 900;
+      letter-spacing: -0.02em; color: var(--white); text-decoration: none;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .nav-logo .drop { color: var(--blood-bright); animation: pulse-drop 2s ease-in-out infinite; }
+    @keyframes pulse-drop {
+      0%,100% { filter: drop-shadow(0 0 4px var(--blood-bright)); }
+      50%      { filter: drop-shadow(0 0 14px var(--blood-bright)); }
+    }
+    .nav-links { display: flex; align-items: center; gap: 2rem; list-style: none; }
+    .nav-links a {
+      font-size: 0.78rem; font-weight: 500; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-light); text-decoration: none; transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--white); }
+    .nav-links a.active { color: var(--blood-bright); }
+    .nav-links .btn-nav-emergency {
+      background: var(--blood); color: var(--white) !important; padding: 0.45rem 1.1rem; border-radius: 2px;
+      transition: background 0.2s !important;
+    }
+    .nav-links .btn-nav-emergency:hover { background: var(--blood-bright) !important; }
+    .nav-links .btn-nav-auth {
+      border: 1px solid rgba(255,255,255,0.25); color: var(--white) !important; padding: 0.45rem 1.1rem; border-radius: 2px;
+    }
+    .nav-links .btn-nav-auth:hover { border-color: var(--white); }
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+    .hamburger span { display: block; width: 24px; height: 2px; background: var(--white); transition: 0.3s; }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      padding: 11rem 4rem 4rem; text-align: center;
+      background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(139,0,0,0.32) 0%, transparent 70%), var(--ink);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .hero-eyebrow {
+      font-family: var(--font-ui); font-size: 0.85rem; letter-spacing: 0.22em; color: var(--blood-bright);
+      margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; gap: 1rem;
+    }
+    .hero-eyebrow::before, .hero-eyebrow::after { content: ''; width: 50px; height: 1px; background: var(--blood); }
+    .page-header h1 {
+      font-family: var(--font-display); font-weight: 900; font-size: clamp(2.4rem, 6vw, 4.5rem);
+      line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 1rem;
+    }
+    .page-header h1 i { color: var(--blood-bright); font-size: 0.7em; vertical-align: middle; }
+    .page-header p { color: var(--text-muted); max-width: 560px; margin: 0 auto 1.2rem; font-weight: 300; line-height: 1.7; }
+    .last-updated { font-size: 0.78rem; color: var(--text-muted); letter-spacing: 0.04em; }
+    .last-updated i { color: var(--blood-bright); margin-right: 0.4rem; }
+
+    .section-label { font-family: var(--font-ui); font-size: 0.8rem; letter-spacing: 0.2em; color: var(--blood); margin-bottom: 0.9rem; }
+    .section-title { font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 900; line-height: 1.1; margin-bottom: 1.2rem; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.8rem 1.8rem;
+      font-family: var(--font-body); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; text-decoration: none; border-radius: 2px; border: none; cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary { background: var(--blood); color: var(--white); box-shadow: 0 4px 24px rgba(192,21,42,0.4); }
+    .btn-primary:hover { background: var(--blood-bright); box-shadow: 0 8px 32px rgba(232,25,44,0.5); }
+    .btn-outline { background: transparent; color: var(--white); border: 1px solid rgba(255,255,255,0.35); }
+    .btn-outline:hover { border-color: var(--white); background: rgba(255,255,255,0.06); }
+
+    /* ── STATS STRIP ── */
+    .stats-section { background: var(--ash); border-bottom: 1px solid rgba(255,255,255,0.06); padding: 3rem 4rem; }
+    .stats-grid { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); }
+    .stat-card { text-align: center; padding: 1.2rem; border-right: 1px solid rgba(255,255,255,0.07); }
+    .stat-card:last-child { border-right: none; }
+    .stat-number { font-family: var(--font-display); font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; color: var(--blood-bright); line-height: 1; margin-bottom: 0.4rem; }
+    .stat-label { font-size: 0.7rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--text-muted); font-weight: 500; }
+
+    /* ── INVENTORY CONTROLS ── */
+    .inventory-section { padding: 6rem 4rem; background: var(--ink); }
+    .inventory-inner { max-width: 1100px; margin: 0 auto; }
+    .inventory-controls {
+      display: flex; justify-content: space-between; align-items: center; gap: 1.5rem;
+      margin-bottom: 3rem; flex-wrap: wrap;
+    }
+    .search-filter { display: flex; gap: 0.8rem; flex: 1; min-width: 240px; max-width: 420px; }
+    .search-filter input {
+      flex: 1; background: var(--ash); border: 1px solid rgba(255,255,255,0.1); border-radius: 3px;
+      padding: 0.7rem 1rem; color: var(--white); font-family: var(--font-body); font-size: 0.9rem;
+    }
+    .search-filter input:focus { outline: none; border-color: var(--blood-bright); }
+    .search-filter input::placeholder { color: #777; }
+
+    /* ── INVENTORY GRID (type cards, matches homepage) ── */
+    .types-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 4rem; }
+    .type-card {
+      background: var(--ash); border: 1px solid rgba(255,255,255,0.06); border-radius: 4px;
+      padding: 2rem 1.5rem; text-align: center; position: relative; overflow: hidden;
+      transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+    }
+    .type-card::before { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--blood); transform: scaleX(0); transition: transform 0.3s; }
+    .type-card:hover { transform: translateY(-6px); border-color: rgba(192,21,42,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+    .type-card:hover::before { transform: scaleX(1); }
+    .type-card.hidden { display: none; }
+    .type-letter { font-family: var(--font-display); font-size: 3rem; font-weight: 900; color: var(--blood-bright); line-height: 1; margin-bottom: 0.3rem; }
+    .type-rh { font-size: 1.3rem; color: var(--text-muted); }
+    .type-name { font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1rem; }
+    .type-bar-wrap { height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; margin-bottom: 0.6rem; overflow: hidden; }
+    .type-bar { height: 100%; border-radius: 2px; width: 0%; transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
+    .type-pct { font-size: 0.7rem; color: var(--text-muted); }
+    .type-badge {
+      position: absolute; top: 0.7rem; right: 0.7rem; color: var(--white);
+      font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.2rem 0.5rem; border-radius: 1px;
+    }
+    .type-badge.critical { background: var(--blood); }
+    .type-badge.low { background: var(--orange); }
+    .type-badge.moderate { background: #5b7fff; }
+    .type-badge.good { background: var(--green); }
+
+    /* ── TABLE ── */
+    .inventory-table-container { overflow-x: auto; margin-bottom: 4rem; border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; }
+    table.inventory-table { width: 100%; border-collapse: collapse; background: var(--ash); min-width: 640px; }
+    .inventory-table thead { background: var(--charcoal); }
+    .inventory-table th {
+      text-align: left; padding: 1rem 1.5rem; font-size: 0.72rem; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-muted); font-weight: 600;
+    }
+    .inventory-table td { padding: 1rem 1.5rem; font-size: 0.9rem; border-top: 1px solid rgba(255,255,255,0.06); color: var(--text-light); }
+    .inventory-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .status-indicator { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 0.6rem; }
+    .status-indicator.critical { background: var(--blood-bright); }
+    .status-indicator.low { background: var(--orange); }
+    .status-indicator.moderate { background: #5b7fff; }
+    .status-indicator.good { background: var(--green); }
+    .table-action {
+      font-size: 0.72rem; color: var(--blood-bright); text-decoration: none; letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .table-action:hover { color: var(--white); }
+
+    /* ── LEGEND ── */
+    .inventory-legend { margin-bottom: 5rem; }
+    .inventory-legend h3 { font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; margin-bottom: 1.2rem; }
+    .legend-items { display: flex; gap: 2rem; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 0.6rem; font-size: 0.85rem; color: var(--text-muted); }
+
+    /* ── URGENT NEEDS ── */
+    .urgent-section { background: var(--blood-deep); padding: 5rem 4rem; position: relative; overflow: hidden; }
+    .urgent-section::before {
+      content: 'URGENT'; position: absolute; right: -1.5rem; top: 50%; transform: translateY(-50%) rotate(90deg);
+      font-family: var(--font-ui); font-size: 7rem; letter-spacing: 0.1em; color: rgba(255,255,255,0.04); pointer-events: none;
+    }
+    .urgent-inner { max-width: 1100px; margin: 0 auto; }
+    .urgent-section .section-label { color: rgba(255,255,255,0.55); }
+    .urgent-section .section-title { color: var(--white); }
+    .urgent-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; margin-top: 2rem; }
+    .urgent-card {
+      background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.15); border-radius: 5px; padding: 1.6rem;
+    }
+    .urgent-card .urgent-type { font-family: var(--font-display); font-size: 1.8rem; font-weight: 900; color: var(--white); margin-bottom: 0.3rem; }
+    .urgent-card p { font-size: 0.85rem; color: rgba(255,255,255,0.75); line-height: 1.5; }
+    .no-urgent { text-align: center; padding: 2rem; color: rgba(255,255,255,0.8); }
+    .no-urgent i { color: var(--green); margin-right: 0.5rem; }
+
+    /* ── DONATION CENTERS ── */
+    .centers-section { padding: 7rem 4rem; background: var(--ink); }
+    .centers-inner { max-width: 1100px; margin: 0 auto; }
+    .centers-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: rgba(255,255,255,0.06); margin-top: 3rem; }
+    .center-card { background: var(--ash); padding: 2.2rem; transition: background 0.3s; }
+    .center-card:hover { background: var(--charcoal); }
+    .center-card h3 { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; }
+    .center-card p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.6rem; display: flex; align-items: flex-start; gap: 0.6rem; line-height: 1.5; }
+    .center-card p i { color: var(--blood-bright); margin-top: 0.15rem; width: 14px; }
+    .center-card .btn { margin-top: 1rem; font-size: 0.72rem; padding: 0.55rem 1.2rem; }
+
+    /* ── FOOTER (shared) ── */
+    footer { background: var(--ink); border-top: 1px solid rgba(255,255,255,0.06); padding: 5rem 4rem 2rem; }
+    .footer-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr; gap: 4rem; margin-bottom: 4rem; }
+    .footer-brand .nav-logo { font-size: 1.8rem; margin-bottom: 1rem; }
+    .footer-brand p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.7; max-width: 260px; }
+    .footer-col h4 { font-family: var(--font-ui); font-size: 0.85rem; letter-spacing: 0.15em; color: var(--text-muted); margin-bottom: 1.5rem; }
+    .footer-col ul { list-style: none; }
+    .footer-col ul li { margin-bottom: 0.7rem; }
+    .footer-col ul a { font-size: 0.88rem; color: var(--text-light); text-decoration: none; transition: color 0.2s; }
+    .footer-col ul a:hover { color: var(--white); }
+    .footer-contact p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.7rem; display: flex; align-items: center; gap: 0.7rem; }
+    .footer-contact p i { color: var(--blood); }
+    .footer-bottom { max-width: 1100px; margin: 0 auto; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .footer-bottom p { font-size: 0.78rem; color: var(--text-muted); }
+
+    /* ── MOBILE ── */
+    @media (max-width: 900px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      .nav-links.open {
+        display: flex; flex-direction: column; position: fixed; inset: 0; background: var(--ink);
+        justify-content: center; align-items: center; gap: 2rem; z-index: 99;
+      }
+      .nav-links.open a { font-size: 1.2rem; }
+      .hamburger { display: flex; position: relative; z-index: 100; }
+      .page-header { padding: 9rem 1.5rem 3rem; }
+      .stats-section { padding: 2.5rem 1.5rem; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .stat-card { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.07); }
+      .inventory-section, .centers-section { padding: 3.5rem 1.5rem; }
+      .urgent-section { padding: 3.5rem 1.5rem; }
+      .types-grid { grid-template-columns: repeat(2, 1fr); }
+      .urgent-grid { grid-template-columns: 1fr; }
+      .centers-grid { grid-template-columns: 1fr; }
+      .footer-inner { grid-template-columns: 1fr 1fr; gap: 2.5rem; }
+      .footer-bottom { flex-direction: column; gap: 1rem; text-align: center; }
+    }
+    @media (max-width: 540px) {
+      .types-grid { grid-template-columns: repeat(2, 1fr); }
+      .footer-inner { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav id="mainNav">
+    <a href="index.html" class="nav-logo"><i class="fas fa-droplet drop"></i> BloodMate</a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="donor-registration.html">Donate</a></li>
+      <li><a href="recipient-request.html">Request</a></li>
+      <li><a href="blood-inventory.html" class="active">Inventory</a></li>
+      <li><a href="ai-eligibility.html">AI Eligibility</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="database/emergency.html" class="btn-nav-emergency">🚨 Emergency</a></li>
+      <li><a href="auth.html" class="btn-nav-auth">Login</a></li>
+      <li><a href="admin/login.html" class="btn-nav-auth">Admin</a></li>
+    </ul>
+    <div class="hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+  </nav>
+
+  <!-- PAGE HEADER -->
+  <section class="page-header">
+    <div class="hero-eyebrow">LIVE STOCK DATA</div>
+    <h1><i class="fas fa-warehouse"></i> Blood Inventory</h1>
+    <p>Real-time availability across every blood type in our network of partner blood banks.</p>
+    <div class="last-updated"><i class="fas fa-clock"></i> Last updated: <span id="lastUpdated">just now</span></div>
+  </section>
+
+  <!-- STATS -->
+  <section class="stats-section">
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-number" id="totalUnits">0</div><div class="stat-label">Total Units Available</div></div>
+      <div class="stat-card"><div class="stat-number" id="criticalTypes">0</div><div class="stat-label">Critical Stock Levels</div></div>
+      <div class="stat-card"><div class="stat-number" id="goodTypes">0</div><div class="stat-label">Healthy Stock Levels</div></div>
+      <div class="stat-card"><div class="stat-number" id="typesTracked">8</div><div class="stat-label">Blood Types Tracked</div></div>
+    </div>
+  </section>
+
+  <!-- INVENTORY -->
+  <section class="inventory-section">
+    <div class="inventory-inner">
+
+      <div class="inventory-controls">
+        <div class="search-filter">
+          <input type="text" id="searchBloodType" placeholder="Search blood type, e.g. O+" />
+        </div>
+        <button class="btn btn-outline" onclick="refreshInventory()"><i class="fas fa-sync-alt"></i> Refresh</button>
+      </div>
+
+      <div class="types-grid" id="inventoryGrid"><!-- populated by JS --></div>
+
+      <div class="inventory-table-container">
+        <table class="inventory-table">
+          <thead>
+            <tr><th>Blood Group</th><th>Units Available</th><th>Status</th><th>Last Updated</th><th>Action</th></tr>
+          </thead>
+          <tbody id="inventoryTableBody"><!-- populated by JS --></tbody>
+        </table>
+      </div>
+
+      <div class="inventory-legend">
+        <h3>Stock Level Indicators</h3>
+        <div class="legend-items">
+          <div class="legend-item"><span class="status-indicator critical"></span><span>Critical (0–5 units)</span></div>
+          <div class="legend-item"><span class="status-indicator low"></span><span>Low (6–15 units)</span></div>
+          <div class="legend-item"><span class="status-indicator moderate"></span><span>Moderate (16–30 units)</span></div>
+          <div class="legend-item"><span class="status-indicator good"></span><span>Good (31+ units)</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- URGENT NEEDS -->
+  <section class="urgent-section">
+    <div class="urgent-inner">
+      <div class="section-label">24 / 7 Priority</div>
+      <h2 class="section-title">Urgent Blood Needs</h2>
+      <div class="urgent-grid" id="urgentNeeds"><!-- populated by JS --></div>
+      <div class="no-urgent" id="noUrgent" style="display:none;">
+        <p><i class="fas fa-check-circle"></i> No urgent blood requests at the moment.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- DONATION CENTERS -->
+  <section class="centers-section">
+    <div class="centers-inner">
+      <div class="section-label">Where To Go</div>
+      <h2 class="section-title">Nearby Donation Centers</h2>
+      <div class="centers-grid">
+        <div class="center-card">
+          <h3>City General Hospital</h3>
+          <p><i class="fas fa-map-marker-alt"></i> 123 Main Street, Medical District</p>
+          <p><i class="fas fa-clock"></i> Open 24/7</p>
+          <p><i class="fas fa-phone"></i> +91 123 456 7890</p>
+          <a href="#" class="btn btn-outline">Get Directions</a>
+        </div>
+        <div class="center-card">
+          <h3>Regional Blood Bank</h3>
+          <p><i class="fas fa-map-marker-alt"></i> 456 Healthcare Avenue</p>
+          <p><i class="fas fa-clock"></i> Mon–Sat: 8AM–6PM</p>
+          <p><i class="fas fa-phone"></i> +91 123 456 7891</p>
+          <a href="#" class="btn btn-outline">Get Directions</a>
+        </div>
+        <div class="center-card">
+          <h3>Community Health Center</h3>
+          <p><i class="fas fa-map-marker-alt"></i> 789 Wellness Road</p>
+          <p><i class="fas fa-clock"></i> Mon–Fri: 9AM–5PM</p>
+          <p><i class="fas fa-phone"></i> +91 123 456 7892</p>
+          <a href="#" class="btn btn-outline">Get Directions</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-logo"><i class="fas fa-droplet drop"></i> BloodMate</a>
+        <p>Connecting hearts and saving lives through smarter blood donation management.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Donors</h4>
+        <ul>
+          <li><a href="donor-registration.html">Register</a></li>
+          <li><a href="ai-eligibility.html">Eligibility Check</a></li>
+          <li><a href="blood-inventory.html">Inventory</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Recipients</h4>
+        <ul>
+          <li><a href="recipient-request.html">Request Blood</a></li>
+          <li><a href="database/emergency.html">Emergency</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-contact">
+        <h4>Contact</h4>
+        <p><i class="fas fa-phone"></i> +91 123 456 7890</p>
+        <p><i class="fas fa-envelope"></i> info@bloodmate.com</p>
+        <p><i class="fas fa-location-dot"></i> 123 Healthcare Street, Medical City</p>
+        <div style="margin-top:1.5rem;">
+          <a href="admin/login.html" class="btn btn-outline" style="font-size:0.72rem;padding:0.5rem 1rem;">Admin Panel →</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 BloodMate. All rights reserved.</p>
+      <p style="color:var(--blood);font-family:var(--font-display);font-style:italic;">Save Lives. Donate Blood.</p>
+    </div>
+  </footer>
+
+  <script>
+    function toggleMenu() { document.getElementById('navLinks').classList.toggle('open'); }
+
+    const BLOOD_TYPES = [
+      { letter: 'A',  rh: '+', tag: null },
+      { letter: 'A',  rh: '−', tag: null },
+      { letter: 'B',  rh: '+', tag: null },
+      { letter: 'B',  rh: '−', tag: null },
+      { letter: 'O',  rh: '+', tag: 'Universal' },
+      { letter: 'O',  rh: '−', tag: null },
+      { letter: 'AB', rh: '+', tag: null },
+      { letter: 'AB', rh: '−', tag: null },
+    ];
+
+    let inventory = [];
+
+    function statusFor(units) {
+      if (units <= 5) return 'critical';
+      if (units <= 15) return 'low';
+      if (units <= 30) return 'moderate';
+      return 'good';
+    }
+
+    function generateInventory() {
+      return BLOOD_TYPES.map(t => {
+        const units = Math.round(2 + Math.random() * 90);
+        return { ...t, units, status: statusFor(units) };
+      });
+    }
+
+    function renderAll() {
+      renderStats();
+      renderGrid();
+      renderTable();
+      renderUrgent();
+      document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function renderStats() {
+      const total = inventory.reduce((sum, t) => sum + t.units, 0);
+      const critical = inventory.filter(t => t.status === 'critical').length;
+      const good = inventory.filter(t => t.status === 'good').length;
+      document.getElementById('totalUnits').textContent = total.toLocaleString();
+      document.getElementById('criticalTypes').textContent = critical;
+      document.getElementById('goodTypes').textContent = good;
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('inventoryGrid');
+      grid.innerHTML = '';
+      inventory.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'type-card';
+        card.dataset.group = (t.letter + t.rh).toLowerCase();
+        const pct = Math.min(100, t.units);
+        card.innerHTML = `
+          ${t.status === 'critical' ? '<div class="type-badge critical">Critical</div>' : ''}
+          ${t.status !== 'critical' && t.tag ? `<div class="type-badge good">${t.tag}</div>` : ''}
+          <div class="type-letter">${t.letter}<span class="type-rh">${t.rh}</span></div>
+          <div class="type-name">${t.letter} ${t.rh === '+' ? 'Positive' : 'Negative'}</div>
+          <div class="type-bar-wrap"><div class="type-bar" data-w="${pct}" style="background:${barColor(t.status)}"></div></div>
+          <div class="type-pct">${t.units} units available</div>
+        `;
+        grid.appendChild(card);
+      });
+      requestAnimationFrame(() => {
+        document.querySelectorAll('.type-bar[data-w]').forEach(bar => { bar.style.width = bar.dataset.w + '%'; });
+      });
+    }
+
+    function barColor(status) {
+      if (status === 'critical') return 'var(--blood-bright)';
+      if (status === 'low') return 'var(--orange)';
+      if (status === 'moderate') return '#5b7fff';
+      return 'var(--green)';
+    }
+
+    function renderTable() {
+      const body = document.getElementById('inventoryTableBody');
+      body.innerHTML = '';
+      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      inventory.forEach(t => {
+        const tr = document.createElement('tr');
+        tr.dataset.group = (t.letter + t.rh).toLowerCase();
+        tr.innerHTML = `
+          <td>${t.letter}${t.rh}</td>
+          <td>${t.units}</td>
+          <td><span class="status-indicator ${t.status}"></span>${t.status.charAt(0).toUpperCase() + t.status.slice(1)}</td>
+          <td>${now}</td>
+          <td><a href="recipient-request.html" class="table-action">Request →</a></td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    function renderUrgent() {
+      const urgentGrid = document.getElementById('urgentNeeds');
+      const noUrgent = document.getElementById('noUrgent');
+      const urgentTypes = inventory.filter(t => t.status === 'critical' || t.status === 'low');
+      urgentGrid.innerHTML = '';
+      if (urgentTypes.length === 0) {
+        noUrgent.style.display = 'block';
+        urgentGrid.style.display = 'none';
+      } else {
+        noUrgent.style.display = 'none';
+        urgentGrid.style.display = 'grid';
+        urgentTypes.forEach(t => {
+          const card = document.createElement('div');
+          card.className = 'urgent-card';
+          card.innerHTML = `
+            <div class="urgent-type">${t.letter}${t.rh}</div>
+            <p>Only ${t.units} units in stock — ${t.status === 'critical' ? 'critically low' : 'running low'}. Donors with this type are urgently needed.</p>
+          `;
+          urgentGrid.appendChild(card);
+        });
+      }
+    }
+
+    function refreshInventory() {
+      inventory = generateInventory();
+      renderAll();
+    }
+
+    document.getElementById('searchBloodType').addEventListener('input', (e) => {
+      const q = e.target.value.trim().toLowerCase().replace(/\s+/g, '');
+      document.querySelectorAll('.type-card').forEach(card => {
+        card.classList.toggle('hidden', q !== '' && !card.dataset.group.includes(q));
+      });
+      document.querySelectorAll('#inventoryTableBody tr').forEach(row => {
+        row.style.display = (q !== '' && !row.dataset.group.includes(q)) ? 'none' : '';
+      });
+    });
+
+    refreshInventory();
+  </script>
+</body>
+</html>

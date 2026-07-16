@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — BloodMate</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blood:       #C0152A;
+      --blood-deep:  #8B0000;
+      --blood-bright:#E8192C;
+      --ink:         #0D0D0D;
+      --ash:         #1A1A1A;
+      --charcoal:    #242424;
+      --border:      rgba(255,255,255,0.07);
+      --text-muted:  #888;
+      --text-light:  #CCCCCC;
+      --white:       #FFFFFF;
+      --font-display:'Playfair Display', Georgia, serif;
+      --font-ui:     'Bebas Neue', sans-serif;
+      --font-body:   'Inter', system-ui, sans-serif;
+      --sidebar-w:   240px;
+    }
+
+    html, body { height: 100%; }
+    body {
+      background: var(--ink);
+      color: var(--white);
+      font-family: var(--font-body);
+      display: flex;
+      overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--ink); }
+    ::-webkit-scrollbar-thumb { background: var(--blood); border-radius: 2px; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: var(--ash);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0;
+      z-index: 50;
+      transition: transform 0.3s;
+    }
+    .sidebar-brand {
+      padding: 1.8rem 1.6rem 1.4rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .brand-logo {
+      font-family: var(--font-display); font-size: 1.25rem; font-weight: 900;
+      color: var(--white); text-decoration: none;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .brand-logo .drop { color: var(--blood-bright); animation: pulse-drop 2s ease-in-out infinite; }
+    @keyframes pulse-drop {
+      0%,100% { filter: drop-shadow(0 0 4px var(--blood-bright)); }
+      50%      { filter: drop-shadow(0 0 14px var(--blood-bright)); }
+    }
+    .sidebar-label {
+      font-family: var(--font-ui); font-size: 0.65rem; letter-spacing: 0.18em;
+      color: var(--text-muted); padding: 1.5rem 1.6rem 0.6rem; text-transform: uppercase;
+    }
+    .sidebar-nav { flex: 1; padding: 0.5rem 0; overflow-y: auto; }
+    .sidebar-nav a {
+      display: flex; align-items: center; gap: 0.8rem;
+      padding: 0.72rem 1.6rem;
+      font-size: 0.82rem; font-weight: 500;
+      color: var(--text-muted); text-decoration: none;
+      border-left: 2px solid transparent;
+      transition: color 0.2s, background 0.2s, border-color 0.2s;
+    }
+    .sidebar-nav a i { width: 16px; text-align: center; font-size: 0.85rem; }
+    .sidebar-nav a:hover { color: var(--white); background: rgba(255,255,255,0.04); }
+    .sidebar-nav a.active {
+      color: var(--white); background: rgba(192,21,42,0.12);
+      border-left-color: var(--blood-bright);
+    }
+    .sidebar-nav a.active i { color: var(--blood-bright); }
+    .sidebar-footer {
+      padding: 1.2rem 1.6rem;
+      border-top: 1px solid var(--border);
+    }
+    .logout-btn {
+      display: flex; align-items: center; gap: 0.7rem;
+      font-size: 0.8rem; font-weight: 500;
+      color: var(--text-muted); text-decoration: none;
+      padding: 0.6rem 0.8rem; border-radius: 4px;
+      transition: color 0.2s, background 0.2s;
+    }
+    .logout-btn:hover { color: var(--blood-bright); background: rgba(192,21,42,0.08); }
+
+    /* ── MAIN ── */
+    .admin-main {
+      margin-left: var(--sidebar-w);
+      flex: 1; min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      background: var(--ash);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2.5rem;
+      height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 40;
+    }
+    .topbar-title {
+      font-family: var(--font-display); font-size: 1.4rem; font-weight: 900;
+    }
+    .topbar-title span { color: var(--blood-bright); font-style: italic; }
+    .topbar-right { display: flex; align-items: center; gap: 1.2rem; }
+    .topbar-pill {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-size: 0.78rem; color: var(--text-muted);
+    }
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 6px #22c55e;
+      animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .topbar-avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--blood); display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; cursor: pointer;
+      border: 2px solid rgba(192,21,42,0.5);
+    }
+    .hamburger-btn {
+      display: none; background: none; border: none; cursor: pointer;
+      color: var(--white); font-size: 1.1rem;
+    }
+
+    /* ── CONTENT ── */
+    .content { padding: 2rem 2.5rem; flex: 1; }
+
+    /* ── STAT CARDS ── */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 1rem; margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--ash);
+      border: 1px solid var(--border);
+      border-radius: 4px; padding: 1.6rem 1.8rem;
+      position: relative; overflow: hidden;
+      transition: border-color 0.25s, transform 0.25s;
+    }
+    .stat-card:hover { border-color: rgba(192,21,42,0.35); transform: translateY(-2px); }
+    .stat-card::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+      background: var(--blood); transform: scaleX(0); transition: transform 0.3s;
+    }
+    .stat-card:hover::after { transform: scaleX(1); }
+    .stat-label-top {
+      font-family: var(--font-ui); font-size: 0.72rem; letter-spacing: 0.16em;
+      color: var(--text-muted); margin-bottom: 0.7rem;
+    }
+    .stat-value {
+      font-family: var(--font-display); font-size: 2.4rem; font-weight: 900;
+      color: var(--white); line-height: 1; margin-bottom: 0.4rem;
+    }
+    .stat-value.red { color: var(--blood-bright); }
+    .stat-change {
+      font-size: 0.72rem; color: var(--text-muted);
+      display: flex; align-items: center; gap: 0.3rem;
+    }
+    .stat-change.up { color: #22c55e; }
+    .stat-change.danger { color: var(--blood-bright); }
+    .stat-icon-bg {
+      position: absolute; right: 1.2rem; top: 50%; transform: translateY(-50%);
+      font-size: 3.5rem; color: rgba(255,255,255,0.03);
+    }
+
+    /* ── GRID ── */
+    .dashboard-grid {
+      display: grid; grid-template-columns: 2fr 1fr;
+      gap: 1rem; margin-bottom: 2rem;
+    }
+    .dashboard-grid-bottom {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 1rem; margin-bottom: 2rem;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--ash);
+      border: 1px solid var(--border);
+      border-radius: 4px; overflow: hidden;
+    }
+    .card-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 1.6rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-head h3 {
+      font-size: 0.82rem; font-weight: 600; letter-spacing: 0.02em;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .card-head h3 i { color: var(--blood); }
+    .card-head a {
+      font-size: 0.72rem; font-weight: 500; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--blood);
+      text-decoration: none; transition: color 0.2s;
+    }
+    .card-head a:hover { color: var(--blood-bright); }
+    .card-body { padding: 0; }
+
+    /* ── TABLE ── */
+    .admin-table { width: 100%; border-collapse: collapse; }
+    .admin-table th {
+      font-family: var(--font-ui); font-size: 0.65rem; letter-spacing: 0.16em;
+      color: var(--text-muted); text-transform: uppercase;
+      padding: 0.8rem 1.2rem; text-align: left;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.015);
+    }
+    .admin-table td {
+      padding: 0.9rem 1.2rem; font-size: 0.82rem;
+      border-bottom: 1px solid var(--border); vertical-align: middle;
+      color: var(--text-light);
+    }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* badges */
+    .badge {
+      display: inline-block; padding: 0.2rem 0.55rem;
+      border-radius: 2px; font-size: 0.65rem;
+      font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .badge-critical { background: rgba(232,25,44,0.18); color: var(--blood-bright); border: 1px solid rgba(232,25,44,0.3); }
+    .badge-urgent   { background: rgba(251,146,60,0.18); color: #fb923c; border: 1px solid rgba(251,146,60,0.3); }
+    .badge-normal   { background: rgba(34,197,94,0.12);  color: #22c55e;  border: 1px solid rgba(34,197,94,0.25); }
+    .badge-pending  { background: rgba(250,204,21,0.12); color: #facc15;  border: 1px solid rgba(250,204,21,0.25); }
+
+    .blood-type-chip {
+      font-family: var(--font-display); font-weight: 700; font-size: 0.9rem;
+      color: var(--blood-bright);
+    }
+
+    /* action btn in table */
+    .tbl-btn {
+      font-size: 0.68rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 0.25rem 0.7rem; border-radius: 2px; cursor: pointer;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--text-muted); transition: 0.2s;
+    }
+    .tbl-btn:hover { border-color: var(--blood); color: var(--blood-bright); }
+
+    /* ── INVENTORY BARS ── */
+    .inv-list { padding: 1rem 1.4rem; }
+    .inv-item { margin-bottom: 1.1rem; }
+    .inv-item:last-child { margin-bottom: 0; }
+    .inv-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 0.3rem;
+    }
+    .inv-type { font-family: var(--font-display); font-weight: 700; font-size: 1rem; color: var(--blood-bright); }
+    .inv-units { font-size: 0.72rem; color: var(--text-muted); }
+    .inv-bar-bg { height: 5px; background: rgba(255,255,255,0.07); border-radius: 3px; overflow: hidden; }
+    .inv-bar { height: 100%; border-radius: 3px; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); background: var(--blood); }
+    .inv-bar.low { background: var(--blood-bright); }
+    .inv-bar.ok  { background: #22c55e; }
+    .inv-bar.mid { background: #fb923c; }
+
+    /* ── MESSAGES ── */
+    .msg-list { padding: 0.5rem 0; }
+    .msg-item {
+      display: flex; gap: 1rem; align-items: flex-start;
+      padding: 0.9rem 1.4rem;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.2s; cursor: pointer;
+    }
+    .msg-item:last-child { border-bottom: none; }
+    .msg-item:hover { background: rgba(255,255,255,0.02); }
+    .msg-avatar {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      background: var(--charcoal); display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 600; color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .msg-name { font-size: 0.82rem; font-weight: 600; margin-bottom: 0.2rem; }
+    .msg-preview { font-size: 0.76rem; color: var(--text-muted); line-height: 1.4; }
+    .msg-time { font-size: 0.68rem; color: var(--text-muted); margin-left: auto; white-space: nowrap; }
+    .msg-unread .msg-name { color: var(--white); }
+    .msg-unread .msg-avatar { background: rgba(192,21,42,0.15); border-color: rgba(192,21,42,0.3); color: var(--blood-bright); }
+
+    /* ── QUICK ACTIONS ── */
+    .quick-section { margin-bottom: 2rem; }
+    .quick-title {
+      font-family: var(--font-ui); font-size: 0.78rem; letter-spacing: 0.18em;
+      color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.9rem;
+    }
+    .quick-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 0.8rem; }
+    .quick-btn {
+      background: var(--ash); border: 1px solid var(--border);
+      border-radius: 4px; padding: 1.2rem;
+      display: flex; flex-direction: column; align-items: center; gap: 0.6rem;
+      cursor: pointer; transition: border-color 0.2s, background 0.2s, transform 0.2s;
+      font-family: var(--font-body);
+    }
+    .quick-btn:hover { border-color: rgba(192,21,42,0.4); background: rgba(192,21,42,0.06); transform: translateY(-2px); }
+    .quick-btn i { font-size: 1.2rem; color: var(--blood-bright); }
+    .quick-btn span { font-size: 0.76rem; font-weight: 500; color: var(--text-light); text-align: center; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--ash);
+      border: 1px solid rgba(192,21,42,0.25);
+      border-radius: 6px; width: 90%; max-width: 440px;
+      overflow: hidden;
+      animation: modal-in 0.25s ease;
+    }
+    @keyframes modal-in { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+    .modal-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.3rem 1.6rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-head h3 { font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; }
+    .modal-close {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 1.1rem; transition: color 0.2s;
+    }
+    .modal-close:hover { color: var(--white); }
+    .modal-body { padding: 1.6rem; }
+    .form-group { margin-bottom: 1.2rem; }
+    .form-group label {
+      display: block; font-size: 0.72rem; font-weight: 500;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted);
+      margin-bottom: 0.4rem;
+    }
+    .form-group select, .form-group input {
+      width: 100%; background: var(--charcoal);
+      border: 1px solid var(--border); border-radius: 3px;
+      padding: 0.7rem 0.9rem; font-family: var(--font-body);
+      font-size: 0.85rem; color: var(--white);
+      transition: border-color 0.2s;
+      appearance: none;
+    }
+    .form-group select:focus, .form-group input:focus {
+      outline: none; border-color: var(--blood);
+    }
+    .modal-foot {
+      display: flex; justify-content: flex-end; gap: 0.8rem;
+      padding: 1.2rem 1.6rem;
+      border-top: 1px solid var(--border);
+    }
+    .btn {
+      padding: 0.65rem 1.4rem; border-radius: 2px; cursor: pointer;
+      font-family: var(--font-body); font-size: 0.8rem; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      border: none; transition: 0.2s;
+    }
+    .btn-primary { background: var(--blood); color: var(--white); }
+    .btn-primary:hover { background: var(--blood-bright); }
+    .btn-secondary { background: var(--charcoal); color: var(--text-light); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: rgba(255,255,255,0.06); }
+
+    /* ── MOBILE ── */
+    @media (max-width: 1024px) {
+      .stats-row { grid-template-columns: repeat(2,1fr); }
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .dashboard-grid-bottom { grid-template-columns: 1fr; }
+      .quick-grid { grid-template-columns: repeat(2,1fr); }
+    }
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .admin-main { margin-left: 0; }
+      .hamburger-btn { display: block; }
+      .content { padding: 1.5rem; }
+      .topbar { padding: 0 1.5rem; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: 1fr; }
+      .quick-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <a href="../index.html" class="brand-logo">
+        <i class="fas fa-droplet drop"></i> BloodMate
+      </a>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-label">Main</div>
+      <a href="dashboard.html" class="active"><i class="fas fa-gauge-high"></i> Dashboard</a>
+      <a href="donors.html"><i class="fas fa-users"></i> Donors</a>
+      <a href="requests.html"><i class="fas fa-hand-holding-medical"></i> Blood Requests</a>
+      <a href="inventory.html"><i class="fas fa-warehouse"></i> Inventory</a>
+      <div class="sidebar-label">Communication</div>
+      <a href="messages.html"><i class="fas fa-envelope"></i> Messages</a>
+      <a href="reports.html"><i class="fas fa-chart-bar"></i> Reports</a>
+      <div class="sidebar-label">System</div>
+      <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="../index.html" class="logout-btn"><i class="fas fa-arrow-right-from-bracket"></i> Logout</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="admin-main">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <button class="hamburger-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">
+          <i class="fas fa-bars"></i>
+        </button>
+        <h1 class="topbar-title">Dashboard <span>Overview</span></h1>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-pill">
+          <div class="status-dot"></div>
+          <span>System Live</span>
+        </div>
+        <div class="topbar-pill"><i class="fas fa-bell" style="color:var(--blood)"></i> 3</div>
+        <div class="topbar-avatar"><i class="fas fa-user"></i></div>
+        <span style="font-size:0.8rem;color:var(--text-muted);">Admin</span>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- STATS -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label-top">Total Donors</div>
+          <div class="stat-value" id="totalDonors">0</div>
+          <div class="stat-change up"><i class="fas fa-arrow-trend-up"></i> +124 this month</div>
+          <div class="stat-icon-bg"><i class="fas fa-users"></i></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label-top">Pending Requests</div>
+          <div class="stat-value red" id="pendingRequests">0</div>
+          <div class="stat-change danger"><i class="fas fa-clock"></i> Awaiting review</div>
+          <div class="stat-icon-bg"><i class="fas fa-hand-holding-medical"></i></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label-top">Units Available</div>
+          <div class="stat-value" id="totalUnits">0</div>
+          <div class="stat-change up"><i class="fas fa-arrow-trend-up"></i> Across all types</div>
+          <div class="stat-icon-bg"><i class="fas fa-droplet"></i></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label-top">Urgent Requests</div>
+          <div class="stat-value red" id="urgentRequests">0</div>
+          <div class="stat-change danger"><i class="fas fa-triangle-exclamation"></i> Immediate action</div>
+          <div class="stat-icon-bg"><i class="fas fa-triangle-exclamation"></i></div>
+        </div>
+      </div>
+
+      <!-- TOP GRID: Requests + Inventory -->
+      <div class="dashboard-grid">
+        <div class="card">
+          <div class="card-head">
+            <h3><i class="fas fa-clock"></i> Recent Blood Requests</h3>
+            <a href="requests.html">View All →</a>
+          </div>
+          <div class="card-body">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Patient</th>
+                  <th>Blood Type</th>
+                  <th>Urgency</th>
+                  <th>Date</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="recentRequests"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h3><i class="fas fa-chart-pie"></i> Inventory Status</h3>
+            <a href="inventory.html">Manage →</a>
+          </div>
+          <div class="card-body">
+            <div class="inv-list" id="inventorySummary"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM GRID: Donors + Messages -->
+      <div class="dashboard-grid-bottom">
+        <div class="card">
+          <div class="card-head">
+            <h3><i class="fas fa-user-plus"></i> Recent Donor Registrations</h3>
+            <a href="donors.html">View All →</a>
+          </div>
+          <div class="card-body">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Blood Type</th>
+                  <th>City</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="recentDonors"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h3><i class="fas fa-envelope"></i> Recent Messages</h3>
+            <a href="messages.html">View All →</a>
+          </div>
+          <div class="card-body">
+            <div class="msg-list" id="recentMessages"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUICK ACTIONS -->
+      <div class="quick-section">
+        <div class="quick-title">Quick Actions</div>
+        <div class="quick-grid">
+          <button class="quick-btn" onclick="openModal('addStockModal')">
+            <i class="fas fa-plus"></i>
+            <span>Add Blood Stock</span>
+          </button>
+          <button class="quick-btn" onclick="approveRequest()">
+            <i class="fas fa-check-circle"></i>
+            <span>Approve Request</span>
+          </button>
+          <button class="quick-btn" onclick="sendNotification()">
+            <i class="fas fa-bell"></i>
+            <span>Send Notification</span>
+          </button>
+          <button class="quick-btn" onclick="generateReport()">
+            <i class="fas fa-file-chart-column"></i>
+            <span>Generate Report</span>
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /admin-main -->
+
+  <!-- MODAL: Add Blood Stock -->
+  <div class="modal-overlay" id="addStockModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>Add Blood Stock</h3>
+        <button class="modal-close" onclick="closeModal('addStockModal')"><i class="fas fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Blood Type</label>
+          <select id="stockBloodType" required>
+            <option value="">Select Blood Type</option>
+            <option>A+</option><option>A-</option>
+            <option>B+</option><option>B-</option>
+            <option>AB+</option><option>AB-</option>
+            <option>O+</option><option>O-</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Number of Units</label>
+          <input type="number" id="stockUnits" min="1" placeholder="e.g. 10" />
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" onclick="closeModal('addStockModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitStock()">Add Stock</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/admin-dashboard.js"></script>
+  <script>
+    // ── SEED DATA ──
+    const requests = [
+      { name: 'Riya Sharma',    type: 'O-',  urgency: 'Critical', date: 'Jun 18' },
+      { name: 'Arjun Patel',    type: 'AB+', urgency: 'Urgent',   date: 'Jun 17' },
+      { name: 'Meena Joshi',    type: 'B+',  urgency: 'Normal',   date: 'Jun 17' },
+      { name: 'Rahul Verma',    type: 'A+',  urgency: 'Pending',  date: 'Jun 16' },
+      { name: 'Sunita Kapoor',  type: 'O+',  urgency: 'Urgent',   date: 'Jun 15' },
+    ];
+    const donors = [
+      { name: 'Ankit Desai',    type: 'A+',  city: 'Ahmedabad', date: 'Jun 19' },
+      { name: 'Priya Mehta',    type: 'O-',  city: 'Surat',     date: 'Jun 18' },
+      { name: 'Vikram Singh',   type: 'B+',  city: 'Vadodara',  date: 'Jun 17' },
+      { name: 'Kavita Rao',     type: 'AB-', city: 'Rajkot',    date: 'Jun 16' },
+    ];
+    const inventory = [
+      { type: 'O+',  units: 88, max: 100 },
+      { type: 'A+',  units: 72, max: 100 },
+      { type: 'B+',  units: 55, max: 100 },
+      { type: 'AB+', units: 44, max: 100 },
+      { type: 'A-',  units: 28, max: 100 },
+      { type: 'O-',  units: 12, max: 100 },
+      { type: 'B-',  units: 18, max: 100 },
+      { type: 'AB-', units: 9,  max: 100 },
+    ];
+    const messages = [
+      { init: 'RK', name: 'Ravi Kumar',   preview: 'Is O- blood available for emergency surgery?', time: '10m', unread: true },
+      { init: 'SP', name: 'Sunita Patel', preview: 'Thank you for connecting me with a donor...', time: '1h',  unread: true },
+      { init: 'AJ', name: 'Amit Joshi',   preview: 'When can I schedule my next donation?',        time: '3h',  unread: false },
+      { init: 'DM', name: 'Dr. Mehta',    preview: 'We need 5 units of AB+ by tomorrow morning.',  time: '5h',  unread: false },
+    ];
+
+    const badgeMap = { Critical:'badge-critical', Urgent:'badge-urgent', Normal:'badge-normal', Pending:'badge-pending' };
+
+    // Render requests
+    const reqTbody = document.getElementById('recentRequests');
+    requests.forEach(r => {
+      reqTbody.innerHTML += `
+        <tr>
+          <td>${r.name}</td>
+          <td><span class="blood-type-chip">${r.type}</span></td>
+          <td><span class="badge ${badgeMap[r.urgency]}">${r.urgency}</span></td>
+          <td style="color:var(--text-muted)">${r.date}</td>
+          <td><button class="tbl-btn">Review</button></td>
+        </tr>`;
+    });
+
+    // Render donors
+    const donTbody = document.getElementById('recentDonors');
+    donors.forEach(d => {
+      donTbody.innerHTML += `
+        <tr>
+          <td>${d.name}</td>
+          <td><span class="blood-type-chip">${d.type}</span></td>
+          <td style="color:var(--text-muted)">${d.city}</td>
+          <td style="color:var(--text-muted)">${d.date}</td>
+        </tr>`;
+    });
+
+    // Render inventory bars
+    const invEl = document.getElementById('inventorySummary');
+    inventory.forEach(item => {
+      const pct = Math.round((item.units / item.max) * 100);
+      const cls = pct <= 20 ? 'low' : pct <= 50 ? 'mid' : 'ok';
+      invEl.innerHTML += `
+        <div class="inv-item">
+          <div class="inv-row">
+            <span class="inv-type">${item.type}</span>
+            <span class="inv-units">${item.units} units</span>
+          </div>
+          <div class="inv-bar-bg"><div class="inv-bar ${cls}" data-w="${pct}" style="width:0"></div></div>
+        </div>`;
+    });
+
+    // Render messages
+    const msgEl = document.getElementById('recentMessages');
+    messages.forEach(m => {
+      msgEl.innerHTML += `
+        <div class="msg-item ${m.unread ? 'msg-unread' : ''}">
+          <div class="msg-avatar">${m.init}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="msg-name">${m.name}</div>
+            <div class="msg-preview">${m.preview}</div>
+          </div>
+          <div class="msg-time">${m.time}</div>
+        </div>`;
+    });
+
+    // Count-up
+    function countUp(el, target) {
+      const dur = 1600; const start = performance.now();
+      function tick(now) {
+        const t = Math.min((now - start) / dur, 1);
+        el.textContent = Math.round((1 - Math.pow(1-t,3)) * target).toLocaleString();
+        if (t < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+    window.addEventListener('load', () => {
+      countUp(document.getElementById('totalDonors'),   12800);
+      countUp(document.getElementById('pendingRequests'), 47);
+      countUp(document.getElementById('totalUnits'),    9600);
+      countUp(document.getElementById('urgentRequests'),  8);
+    });
+
+    // Animate inventory bars
+    setTimeout(() => {
+      document.querySelectorAll('.inv-bar[data-w]').forEach(b => {
+        b.style.width = b.dataset.w + '%';
+      });
+    }, 300);
+
+    // Modal
+    function openModal(id)  { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    function submitStock() {
+      const type  = document.getElementById('stockBloodType').value;
+      const units = document.getElementById('stockUnits').value;
+      if (!type || !units) return alert('Please fill all fields.');
+      alert(`✓ Added ${units} units of ${type}`);
+      closeModal('addStockModal');
+    }
+    function approveRequest()   { alert('Opening request approval workflow…'); }
+    function sendNotification() { alert('Opening notification panel…'); }
+    function generateReport()   { alert('Generating report…'); }
+
+    // Close modal on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(el => {
+      el.addEventListener('click', e => { if(e.target === el) el.classList.remove('open'); });
+    });
+  </script>
+</body>
+</html>

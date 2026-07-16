@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Eligibility Tester — BloodMate</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blood:      #C0152A;
+      --blood-deep: #8B0000;
+      --blood-bright:#E8192C;
+      --ink:        #0D0D0D;
+      --ash:        #1A1A1A;
+      --charcoal:   #2A2A2A;
+      --fog:        #F5F0EC;
+      --cream:      #FAF7F4;
+      --text-muted: #999;
+      --text-light: #CCCCCC;
+      --white:      #FFFFFF;
+      --green:      #28C840;
+      --yellow:     #FEBC2E;
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-ui:    'Bebas Neue', sans-serif;
+      --font-body:  'Inter', system-ui, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--ink);
+      color: var(--white);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--ink); }
+    ::-webkit-scrollbar-thumb { background: var(--blood); border-radius: 2px; }
+
+    /* ── NAV (shared) ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 4rem;
+      background: rgba(13,13,13,0.92);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(192,21,42,0.18);
+    }
+    .nav-logo {
+      font-family: var(--font-display);
+      font-size: 1.5rem; font-weight: 900;
+      letter-spacing: -0.02em;
+      color: var(--white);
+      text-decoration: none;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .nav-logo .drop { color: var(--blood-bright); animation: pulse-drop 2s ease-in-out infinite; }
+    @keyframes pulse-drop {
+      0%,100% { filter: drop-shadow(0 0 4px var(--blood-bright)); }
+      50%      { filter: drop-shadow(0 0 14px var(--blood-bright)); }
+    }
+    .nav-links { display: flex; align-items: center; gap: 2rem; list-style: none; }
+    .nav-links a {
+      font-size: 0.78rem; font-weight: 500; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-light);
+      text-decoration: none; transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--white); }
+    .nav-links a.active { color: var(--blood-bright); }
+    .nav-links .btn-nav-emergency {
+      background: var(--blood); color: var(--white) !important;
+      padding: 0.45rem 1.1rem; border-radius: 2px;
+      transition: background 0.2s !important;
+    }
+    .nav-links .btn-nav-emergency:hover { background: var(--blood-bright) !important; }
+    .nav-links .btn-nav-auth {
+      border: 1px solid rgba(255,255,255,0.25);
+      color: var(--white) !important;
+      padding: 0.45rem 1.1rem; border-radius: 2px;
+    }
+    .nav-links .btn-nav-auth:hover { border-color: var(--white); }
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+    .hamburger span { display: block; width: 24px; height: 2px; background: var(--white); transition: 0.3s; }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      position: relative;
+      padding: 11rem 4rem 5rem;
+      text-align: center;
+      background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(139,0,0,0.32) 0%, transparent 70%), var(--ink);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .hero-eyebrow {
+      font-family: var(--font-ui); font-size: 0.85rem; letter-spacing: 0.22em;
+      color: var(--blood-bright); margin-bottom: 1rem;
+      display: flex; align-items: center; justify-content: center; gap: 1rem;
+    }
+    .hero-eyebrow::before, .hero-eyebrow::after { content: ''; width: 50px; height: 1px; background: var(--blood); }
+    .page-header h1 {
+      font-family: var(--font-display); font-weight: 900;
+      font-size: clamp(2.4rem, 6vw, 4.5rem); line-height: 1.05;
+      letter-spacing: -0.02em; margin-bottom: 1rem;
+    }
+    .page-header h1 i { color: var(--blood-bright); font-size: 0.7em; vertical-align: middle; }
+    .page-header p { color: var(--text-muted); max-width: 560px; margin: 0 auto; font-weight: 300; line-height: 1.7; }
+
+    .section-label {
+      font-family: var(--font-ui); font-size: 0.8rem; letter-spacing: 0.2em;
+      color: var(--blood); margin-bottom: 0.9rem;
+    }
+    .section-title {
+      font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 900; line-height: 1.1; margin-bottom: 1.2rem;
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.85rem 2rem; font-family: var(--font-body);
+      font-size: 0.82rem; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; text-decoration: none;
+      border-radius: 2px; border: none; cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary { background: var(--blood); color: var(--white); box-shadow: 0 4px 24px rgba(192,21,42,0.4); }
+    .btn-primary:hover { background: var(--blood-bright); box-shadow: 0 8px 32px rgba(232,25,44,0.5); }
+    .btn-outline { background: transparent; color: var(--white); border: 1px solid rgba(255,255,255,0.35); }
+    .btn-outline:hover { border-color: var(--white); background: rgba(255,255,255,0.06); }
+
+    /* ── MAIN LAYOUT ── */
+    .form-section { padding: 6rem 4rem; background: var(--ink); }
+    .form-wrapper {
+      max-width: 1100px; margin: 0 auto;
+      display: grid; grid-template-columns: 0.85fr 1.15fr; gap: 4rem; align-items: start;
+    }
+
+    .form-info {
+      background: var(--ash);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 6px; padding: 2.5rem;
+      position: sticky; top: 9rem;
+    }
+    .form-info h3 {
+      font-family: var(--font-display); font-size: 1.2rem; font-weight: 700;
+      margin-bottom: 1.4rem; display: flex; align-items: center; gap: 0.6rem;
+    }
+    .form-info h3 i { color: var(--blood-bright); }
+    .form-info ul { list-style: none; margin-bottom: 1.8rem; }
+    .form-info ul li {
+      font-size: 0.88rem; color: var(--text-light); line-height: 1.6;
+      margin-bottom: 0.9rem; display: flex; align-items: flex-start; gap: 0.6rem;
+    }
+    .form-info ul li i { color: var(--blood-bright); margin-top: 0.2rem; font-size: 0.8rem; }
+    .form-info .eligibility-note {
+      background: rgba(192,21,42,0.08); border: 1px solid rgba(192,21,42,0.25);
+      border-radius: 4px; padding: 1.2rem;
+    }
+    .form-info .eligibility-note h4 {
+      font-family: var(--font-ui); font-size: 0.8rem; letter-spacing: 0.1em;
+      color: var(--blood-bright); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;
+    }
+    .form-info .eligibility-note p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.6; }
+
+    .form-card {
+      background: var(--ash); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 6px; padding: 2.8rem;
+    }
+    .form-card h2 {
+      font-family: var(--font-display); font-size: 1.6rem; font-weight: 700;
+      margin-bottom: 2rem;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group label {
+      font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 0.6rem; font-weight: 500;
+    }
+    .form-group input {
+      background: var(--charcoal); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 3px; padding: 0.75rem 1rem; color: var(--white);
+      font-family: var(--font-body); font-size: 0.92rem; transition: border-color 0.2s;
+    }
+    .form-group input:focus { outline: none; border-color: var(--blood-bright); }
+    .form-group input::placeholder { color: #666; }
+
+    .checkbox-block { margin-bottom: 1.6rem; }
+    .checkbox-block > label.block-label {
+      font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 0.8rem; display: block; font-weight: 500;
+    }
+    .checkbox-group { margin-bottom: 0.6rem; }
+    .checkbox-label {
+      display: flex; align-items: center; gap: 0.7rem;
+      font-size: 0.88rem; color: var(--text-light); cursor: pointer;
+    }
+    .checkbox-label input[type="checkbox"] {
+      width: 17px; height: 17px; accent-color: var(--blood-bright); cursor: pointer;
+    }
+
+    .form-actions { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem; }
+
+    /* ── AI RESULT VISUAL ── */
+    .ai-result-card {
+      margin-top: 2rem; background: var(--charcoal);
+      border: 1px solid rgba(192,21,42,0.25); border-radius: 6px; padding: 2rem;
+      display: none;
+    }
+    .ai-result-card.visible { display: block; animation: fadeUp 0.5s ease; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .ai-visual-header {
+      display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.8rem;
+    }
+    .ai-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .ai-dot.red { background: #FF5F57; } .ai-dot.yellow { background: #FEBC2E; } .ai-dot.green { background: #28C840; }
+    .ai-visual-header span { font-size: 0.72rem; color: var(--text-muted); margin-left: 0.4rem; }
+    .ai-bar-label { display: flex; justify-content: space-between; font-size: 0.74rem; color: var(--text-muted); margin-bottom: 0.35rem; }
+    .ai-bar-wrap { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; margin-bottom: 1.3rem; overflow: hidden; }
+    .ai-bar { height: 100%; border-radius: 3px; width: 0%; transition: width 1s cubic-bezier(.4,0,.2,1); }
+    .ai-bar.green { background: var(--green); }
+    .ai-bar.yellow { background: var(--yellow); }
+    .ai-bar.red { background: var(--blood-bright); }
+    .ai-result-banner {
+      border-radius: 4px; padding: 1rem 1.2rem; font-size: 0.88rem;
+      display: flex; align-items: center; gap: 0.7rem; margin-top: 0.5rem;
+    }
+    .ai-result-banner.eligible { background: rgba(40,200,64,0.1); border: 1px solid rgba(40,200,64,0.3); color: var(--green); }
+    .ai-result-banner.caution { background: rgba(254,188,46,0.1); border: 1px solid rgba(254,188,46,0.3); color: var(--yellow); }
+    .ai-result-banner.ineligible { background: rgba(192,21,42,0.1); border: 1px solid rgba(192,21,42,0.3); color: var(--blood-bright); }
+    .ai-result-reasons { margin-top: 1rem; list-style: none; }
+    .ai-result-reasons li {
+      font-size: 0.82rem; color: var(--text-light); padding: 0.4rem 0;
+      border-top: 1px solid rgba(255,255,255,0.06); display: flex; gap: 0.6rem;
+    }
+    .ai-result-reasons li i { color: var(--blood-bright); margin-top: 0.15rem; font-size: 0.75rem; }
+
+    /* ── FOOTER (shared) ── */
+    footer { background: var(--ink); border-top: 1px solid rgba(255,255,255,0.06); padding: 5rem 4rem 2rem; }
+    .footer-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr; gap: 4rem; margin-bottom: 4rem; }
+    .footer-brand .nav-logo { font-size: 1.8rem; margin-bottom: 1rem; }
+    .footer-brand p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.7; max-width: 260px; }
+    .footer-col h4 { font-family: var(--font-ui); font-size: 0.85rem; letter-spacing: 0.15em; color: var(--text-muted); margin-bottom: 1.5rem; }
+    .footer-col ul { list-style: none; }
+    .footer-col ul li { margin-bottom: 0.7rem; }
+    .footer-col ul a { font-size: 0.88rem; color: var(--text-light); text-decoration: none; transition: color 0.2s; }
+    .footer-col ul a:hover { color: var(--white); }
+    .footer-contact p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.7rem; display: flex; align-items: center; gap: 0.7rem; }
+    .footer-contact p i { color: var(--blood); }
+    .footer-bottom { max-width: 1100px; margin: 0 auto; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .footer-bottom p { font-size: 0.78rem; color: var(--text-muted); }
+
+    /* ── MOBILE ── */
+    @media (max-width: 900px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      .nav-links.open {
+        display: flex; flex-direction: column; position: fixed; inset: 0; background: var(--ink);
+        justify-content: center; align-items: center; gap: 2rem; z-index: 99;
+      }
+      .nav-links.open a { font-size: 1.2rem; }
+      .hamburger { display: flex; position: relative; z-index: 100; }
+      .page-header { padding: 9rem 1.5rem 3.5rem; }
+      .form-section { padding: 3.5rem 1.5rem; }
+      .form-wrapper { grid-template-columns: 1fr; gap: 2.5rem; }
+      .form-info { position: static; }
+      .form-card { padding: 2rem 1.5rem; }
+      .form-row { grid-template-columns: 1fr; }
+      .footer-inner { grid-template-columns: 1fr 1fr; gap: 2.5rem; }
+      .footer-bottom { flex-direction: column; gap: 1rem; text-align: center; }
+    }
+    @media (max-width: 540px) {
+      .footer-inner { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav id="mainNav">
+    <a href="index.html" class="nav-logo"><i class="fas fa-droplet drop"></i> BloodMate</a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="donor-registration.html">Donate</a></li>
+      <li><a href="recipient-request.html">Request</a></li>
+      <li><a href="blood-inventory.html">Inventory</a></li>
+      <li><a href="ai-eligibility.html" class="active">AI Eligibility</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="database/emergency.html" class="btn-nav-emergency">🚨 Emergency</a></li>
+      <li><a href="auth.html" class="btn-nav-auth">Login</a></li>
+      <li><a href="admin/login.html" class="btn-nav-auth">Admin</a></li>
+    </ul>
+    <div class="hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+  </nav>
+
+  <!-- PAGE HEADER -->
+  <section class="page-header">
+    <div class="hero-eyebrow">AI-POWERED PRE-CHECK</div>
+    <h1><i class="fas fa-robot"></i> Check Your Eligibility</h1>
+    <p>Answer a few quick health questions — or pull metrics straight from a fitness tracker — and our model predicts whether you're eligible to donate today.</p>
+  </section>
+
+  <!-- FORM SECTION -->
+  <section class="form-section">
+    <div class="form-wrapper">
+
+      <!-- INFO ASIDE -->
+      <aside class="form-info">
+        <h3><i class="fas fa-circle-info"></i> What we check</h3>
+        <ul>
+          <li><i class="fas fa-check"></i> Age 18–65, weight 50kg or more</li>
+          <li><i class="fas fa-check"></i> Hemoglobin proxy via wellness metrics</li>
+          <li><i class="fas fa-check"></i> Rest, hydration, and vitals stability</li>
+          <li><i class="fas fa-check"></i> No recent illness, infection, or antibiotics</li>
+          <li><i class="fas fa-check"></i> Donation interval since your last visit</li>
+        </ul>
+        <div class="eligibility-note">
+          <h4><i class="fas fa-shield-heart"></i> Note</h4>
+          <p>This is a pre-check only. Final eligibility is always confirmed by certified staff at the donation center.</p>
+        </div>
+      </aside>
+
+      <!-- FORM -->
+      <div class="form-card">
+        <h2>Tell us about your current health</h2>
+        <form id="aiEligibilityForm" novalidate>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="age">Age</label>
+              <input type="number" id="age" min="16" max="80" required placeholder="e.g., 28" />
+            </div>
+            <div class="form-group">
+              <label for="weight">Weight (kg)</label>
+              <input type="number" id="weight" min="30" max="200" required placeholder="e.g., 65" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="resting_hr">Resting heart rate (bpm)</label>
+              <input type="number" id="resting_hr" min="35" max="140" placeholder="e.g., 62" />
+            </div>
+            <div class="form-group">
+              <label for="sleep_hours">Sleep in last 24h (hours)</label>
+              <input type="number" id="sleep_hours" step="0.1" min="0" max="14" placeholder="e.g., 7.5" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="systolic">Blood pressure — systolic (mmHg)</label>
+              <input type="number" id="systolic" min="80" max="200" placeholder="e.g., 118" />
+            </div>
+            <div class="form-group">
+              <label for="diastolic">Blood pressure — diastolic (mmHg)</label>
+              <input type="number" id="diastolic" min="50" max="130" placeholder="e.g., 76" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="temperature">Body temperature (°C)</label>
+              <input type="number" id="temperature" step="0.1" min="34" max="42" placeholder="e.g., 36.6" />
+            </div>
+            <div class="form-group">
+              <label for="last_donation">Last donation date</label>
+              <input type="date" id="last_donation" />
+            </div>
+          </div>
+
+          <div class="checkbox-block">
+            <label class="block-label">Recent health</label>
+            <div class="checkbox-group">
+              <label class="checkbox-label"><input type="checkbox" id="recent_illness" /> Fever, cold, or infection in the last 14 days</label>
+            </div>
+            <div class="checkbox-group">
+              <label class="checkbox-label"><input type="checkbox" id="on_antibiotics" /> Currently on antibiotics</label>
+            </div>
+            <div class="checkbox-group">
+              <label class="checkbox-label"><input type="checkbox" id="pregnant_recent" /> Pregnant, or donated within the last 3 months</label>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" id="simulateTracker" class="btn btn-outline"><i class="fas fa-watch-fitness"></i> Simulate From Fitness Tracker</button>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-robot"></i> Run AI Eligibility Check</button>
+          </div>
+        </form>
+
+        <!-- RESULT -->
+        <div class="ai-result-card" id="aiResultCard">
+          <div class="ai-visual-header">
+            <div class="ai-dot red"></div><div class="ai-dot yellow"></div><div class="ai-dot green"></div>
+            <span>BloodMate AI Eligibility</span>
+          </div>
+          <div class="ai-bar-label"><span>Overall eligibility score</span><span id="scoreOverallLabel">0%</span></div>
+          <div class="ai-bar-wrap"><div class="ai-bar green" id="barOverall"></div></div>
+          <div class="ai-bar-label"><span>Health factors</span><span id="scoreHealthLabel">0%</span></div>
+          <div class="ai-bar-wrap"><div class="ai-bar yellow" id="barHealth"></div></div>
+          <div class="ai-bar-label"><span>Deferral risk</span><span id="scoreRiskLabel">0%</span></div>
+          <div class="ai-bar-wrap"><div class="ai-bar red" id="barRisk"></div></div>
+
+          <div id="resultBanner" class="ai-result-banner eligible">
+            <i class="fas fa-check-circle"></i>
+            <span id="resultBannerText">You are likely eligible to donate.</span>
+          </div>
+          <ul class="ai-result-reasons" id="resultReasons"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-logo"><i class="fas fa-droplet drop"></i> BloodMate</a>
+        <p>Connecting hearts and saving lives through smarter blood donation management.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Donors</h4>
+        <ul>
+          <li><a href="donor-registration.html">Register</a></li>
+          <li><a href="ai-eligibility.html">Eligibility Check</a></li>
+          <li><a href="blood-inventory.html">Inventory</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Recipients</h4>
+        <ul>
+          <li><a href="recipient-request.html">Request Blood</a></li>
+          <li><a href="database/emergency.html">Emergency</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col footer-contact">
+        <h4>Contact</h4>
+        <p><i class="fas fa-phone"></i> +91 123 456 7890</p>
+        <p><i class="fas fa-envelope"></i> info@bloodmate.com</p>
+        <p><i class="fas fa-location-dot"></i> 123 Healthcare Street, Medical City</p>
+        <div style="margin-top:1.5rem;">
+          <a href="admin/login.html" class="btn btn-outline" style="font-size:0.72rem;padding:0.5rem 1rem;">Admin Panel →</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 BloodMate. All rights reserved.</p>
+      <p style="color:var(--blood);font-family:var(--font-display);font-style:italic;">Save Lives. Donate Blood.</p>
+    </div>
+  </footer>
+
+  <script>
+    // NAV
+    function toggleMenu() { document.getElementById('navLinks').classList.toggle('open'); }
+
+    // SIMULATE FROM FITNESS TRACKER
+    document.getElementById('simulateTracker').addEventListener('click', () => {
+      document.getElementById('age').value = Math.round(20 + Math.random() * 35);
+      document.getElementById('weight').value = Math.round(52 + Math.random() * 40);
+      document.getElementById('resting_hr').value = Math.round(55 + Math.random() * 25);
+      document.getElementById('sleep_hours').value = (5.5 + Math.random() * 3).toFixed(1);
+      document.getElementById('systolic').value = Math.round(105 + Math.random() * 25);
+      document.getElementById('diastolic').value = Math.round(65 + Math.random() * 20);
+      document.getElementById('temperature').value = (36.2 + Math.random() * 1.1).toFixed(1);
+      document.getElementById('recent_illness').checked = Math.random() < 0.1;
+      document.getElementById('on_antibiotics').checked = Math.random() < 0.05;
+      document.getElementById('pregnant_recent').checked = Math.random() < 0.05;
+    });
+
+    // ELIGIBILITY LOGIC
+    document.getElementById('aiEligibilityForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const age = parseFloat(document.getElementById('age').value);
+      const weight = parseFloat(document.getElementById('weight').value);
+      const hr = parseFloat(document.getElementById('resting_hr').value);
+      const sleep = parseFloat(document.getElementById('sleep_hours').value);
+      const sys = parseFloat(document.getElementById('systolic').value);
+      const dia = parseFloat(document.getElementById('diastolic').value);
+      const temp = parseFloat(document.getElementById('temperature').value);
+      const lastDonation = document.getElementById('last_donation').value;
+      const illness = document.getElementById('recent_illness').checked;
+      const antibiotics = document.getElementById('on_antibiotics').checked;
+      const pregnantRecent = document.getElementById('pregnant_recent').checked;
+
+      const reasons = [];
+      let hardFail = false;
+      let healthScore = 100;
+      let riskScore = 0;
+
+      if (!isNaN(age)) {
+        if (age < 18 || age > 65) { hardFail = true; reasons.push(`Age ${age} is outside the 18–65 donation window.`); }
+      }
+      if (!isNaN(weight)) {
+        if (weight < 50) { hardFail = true; reasons.push(`Weight ${weight}kg is below the 50kg minimum.`); }
+      }
+      if (illness) { hardFail = true; reasons.push('Recent fever, cold, or infection requires deferral.'); }
+      if (antibiotics) { hardFail = true; reasons.push('Currently on antibiotics — please wait until the course is finished.'); }
+      if (pregnantRecent) { hardFail = true; reasons.push('Pregnancy or a donation within 3 months requires deferral.'); }
+
+      if (lastDonation) {
+        const days = (new Date() - new Date(lastDonation)) / (1000 * 60 * 60 * 24);
+        if (days < 56) { hardFail = true; reasons.push(`Only ${Math.max(0, Math.round(days))} days since your last donation — 56 are required.`); }
+      }
+
+      if (!isNaN(hr)) {
+        if (hr < 50 || hr > 100) { healthScore -= 15; riskScore += 12; reasons.push(`Resting heart rate of ${hr} bpm is outside the typical range.`); }
+      }
+      if (!isNaN(sleep)) {
+        if (sleep < 5) { healthScore -= 15; riskScore += 10; reasons.push(`Only ${sleep}h of sleep — rest up before donating.`); }
+      }
+      if (!isNaN(sys) && !isNaN(dia)) {
+        if (sys < 90 || sys > 180 || dia < 50 || dia > 100) { healthScore -= 20; riskScore += 15; reasons.push(`Blood pressure ${sys}/${dia} mmHg is outside the typical range.`); }
+      }
+      if (!isNaN(temp)) {
+        if (temp >= 37.5) { hardFail = true; reasons.push(`Body temperature of ${temp}°C suggests you may be unwell.`); }
+      }
+
+      healthScore = Math.max(0, Math.min(100, healthScore));
+      riskScore = Math.max(0, Math.min(100, riskScore));
+      let overall = hardFail ? Math.min(20, healthScore) : Math.round((healthScore * 0.7) + ((100 - riskScore) * 0.3));
+      overall = Math.max(0, Math.min(100, overall));
+
+      const card = document.getElementById('aiResultCard');
+      card.classList.add('visible');
+
+      document.getElementById('scoreOverallLabel').textContent = overall + '%';
+      document.getElementById('scoreHealthLabel').textContent = healthScore + '%';
+      document.getElementById('scoreRiskLabel').textContent = riskScore + '%';
+
+      requestAnimationFrame(() => {
+        document.getElementById('barOverall').style.width = overall + '%';
+        document.getElementById('barHealth').style.width = healthScore + '%';
+        document.getElementById('barRisk').style.width = riskScore + '%';
+      });
+
+      const banner = document.getElementById('resultBanner');
+      const bannerText = document.getElementById('resultBannerText');
+      banner.className = 'ai-result-banner';
+      if (hardFail) {
+        banner.classList.add('ineligible');
+        bannerText.innerHTML = '<i class="fas fa-circle-xmark"></i> Not eligible to donate right now.';
+      } else if (overall >= 75) {
+        banner.classList.add('eligible');
+        bannerText.innerHTML = '<i class="fas fa-check-circle"></i> You are likely eligible to donate. Schedule now.';
+      } else {
+        banner.classList.add('caution');
+        bannerText.innerHTML = '<i class="fas fa-triangle-exclamation"></i> Borderline — a staff member should confirm in person.';
+      }
+
+      const list = document.getElementById('resultReasons');
+      list.innerHTML = '';
+      if (reasons.length === 0) {
+        const li = document.createElement('li');
+        li.innerHTML = '<i class="fas fa-circle-check"></i> All checked metrics fall within healthy donation ranges.';
+        list.appendChild(li);
+      } else {
+        reasons.forEach(r => {
+          const li = document.createElement('li');
+          li.innerHTML = `<i class="fas fa-circle-exclamation"></i> ${r}`;
+          list.appendChild(li);
+        });
+      }
+
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  </script>
+</body>
+</html>
