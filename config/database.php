@@ -12,13 +12,12 @@ class Database {
 
     public function getConnection() {
         $this->conn = null;
-        
+
         try {
-            $dsn = "mysql:host=" . $this->config['host'] . 
-                   ";dbname=" . $this->config['dbname'] . 
-                   ";port=" . $this->config['port'] . 
-                   ";charset=utf8mb4";
-            
+            $dsn = "pgsql:host=" . $this->config['host'] .
+                   ";dbname=" . $this->config['dbname'] .
+                   ";port=" . $this->config['port'];
+
             $options = [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -26,12 +25,12 @@ class Database {
                 PDO::ATTR_PERSISTENT => false
             ];
 
-            // Some managed MySQL providers (e.g. Aiven) require SSL.
-            // If a CA certificate path is configured, enable SSL on the connection.
-            $sslCa = Config::get('DB_SSL_CA');
-            if (!empty($sslCa) && file_exists($sslCa)) {
-                $options[PDO::MYSQL_ATTR_SSL_CA] = $sslCa;
-                $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+            // If your Postgres provider requires SSL (Render's internal
+            // connection usually does NOT need this, but external/managed
+            // providers often do), add "sslmode=require" to the DSN via env.
+            $sslMode = Config::get('DB_SSLMODE');
+            if (!empty($sslMode)) {
+                $dsn .= ";sslmode=" . $sslMode;
             }
 
             $this->conn = new PDO(
@@ -48,7 +47,7 @@ class Database {
                 echo "Database connection failed. Please try again later.";
             }
         }
-        
+
         return $this->conn;
     }
 

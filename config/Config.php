@@ -49,7 +49,7 @@ class Config {
             'DB_NAME' => 'bloodmate',
             'DB_USER' => 'root',
             'DB_PASSWORD' => '',
-            'DB_PORT' => '3306',
+            'DB_PORT' => '5432',
             'APP_NAME' => 'BloodMate',
             'APP_URL' => 'http://localhost',
             'APP_ENV' => 'development',
@@ -105,7 +105,7 @@ class Config {
             'dbname' => self::get('DB_NAME'),
             'username' => self::get('DB_USER'),
             'password' => self::get('DB_PASSWORD'),
-            'port' => self::get('DB_PORT', '3306')
+            'port' => self::get('DB_PORT', '5432')
         ];
     }
 
