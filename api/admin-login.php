@@ -26,7 +26,7 @@ try {
     $stmt = $db->prepare("
         SELECT id, username, password_hash, email, full_name, role, is_active 
         FROM admin_users 
-        WHERE username = ? AND is_active = 1
+        WHERE username = ? AND is_active = TRUE
     ");
     $stmt->execute([$_POST['username']]);
     $admin = $stmt->fetch();
