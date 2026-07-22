@@ -1,26 +1,27 @@
 <?php
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST');
-header('Access-Control-Allow-Headers: Content-Type');
+require_once 'middleware.php';
 
-require_once '../config/database.php';
+// Apply rate limiting for login attempts
+Security::rateLimit(null, 5, 300); // 5 attempts per 5 minutes
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
-    exit;
+    sendJsonResponse(false, 'Method not allowed', null, 405);
 }
 
 try {
     $database = new Database();
     $db = $database->getConnection();
     
-    // Validate required fields
-    if (empty($_POST['username']) || empty($_POST['password'])) {
-        echo json_encode(['success' => false, 'message' => 'Username and password are required']);
-        exit;
+    if (!$db) {
+        sendJsonResponse(false, 'Database connection failed', null, 500);
     }
+    
+    // Get and sanitize input
+    $input = Security::getJsonInput();
+    $input = sanitizeInputData($input);
+    
+    // Validate required fields
+    validateRequiredFields($input, ['username', 'password']);
     
     // Get admin user
     $stmt = $db->prepare("
@@ -28,52 +29,52 @@ try {
         FROM admin_users 
         WHERE username = ? AND is_active = TRUE
     ");
-    $stmt->execute([$_POST['username']]);
+    $stmt->execute([$input['username']]);
     $admin = $stmt->fetch();
     
     if (!$admin) {
-        echo json_encode(['success' => false, 'message' => 'Invalid credentials']);
-        exit;
+        Security::logSecurityEvent('admin_login_failed', ['username' => $input['username']]);
+        sendJsonResponse(false, 'Invalid credentials', null, 401);
     }
     
     // Verify password
-    if (!password_verify($_POST['password'], $admin['password_hash'])) {
-        echo json_encode(['success' => false, 'message' => 'Invalid credentials']);
-        exit;
+    if (!Auth::verifyPassword($input['password'], $admin['password_hash'])) {
+        Security::logSecurityEvent('admin_login_failed', ['username' => $input['username'], 'admin_id' => $admin['id']]);
+        sendJsonResponse(false, 'Invalid credentials', null, 401);
     }
     
-    // Generate JWT token (simplified version)
-    $token = base64_encode(json_encode([
-        'admin_id' => $admin['id'],
+    // Generate JWT token
+    $payload = [
+        'user_id' => $admin['id'],
         'username' => $admin['username'],
-        'role' => $admin['role'],
-        'exp' => time() + (24 * 60 * 60) // 24 hours
-    ]));
+        'email' => $admin['email'],
+        'role' => strtolower($admin['role'])
+    ];
+    $token = Auth::generateToken($payload);
     
     // Update last login
     $stmt = $db->prepare("UPDATE admin_users SET last_login = NOW() WHERE id = ?");
     $stmt->execute([$admin['id']]);
     
     // Log the login
-    error_log("Admin login: {$admin['username']} ({$admin['role']})");
+    Logger::info('Admin login successful', ['username' => $admin['username'], 'role' => $admin['role']]);
+    Security::logSecurityEvent('admin_login_success', ['admin_id' => $admin['id'], 'username' => $admin['username']]);
     
-    echo json_encode([
-        'success' => true,
-        'message' => 'Login successful',
+    sendJsonResponse(true, 'Login successful', [
         'token' => $token,
         'user' => [
             'id' => $admin['id'],
             'username' => $admin['username'],
             'full_name' => $admin['full_name'],
-            'role' => $admin['role']
+            'role' => strtolower($admin['role'])
         ]
     ]);
     
 } catch (PDOException $e) {
-    error_log("Database error in admin-login.php: " . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'Database error occurred']);
+    Logger::error("Database error in admin-login.php: " . $e->getMessage());
+    sendJsonResponse(false, 'Database error occurred', null, 500);
 } catch (Exception $e) {
-    error_log("Error in admin-login.php: " . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'An error occurred']);
+    Logger::error("Error in admin-login.php: " . $e->getMessage());
+    sendJsonResponse(false, 'An error occurred', null, 500);
 }
 ?>

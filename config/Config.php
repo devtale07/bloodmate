@@ -45,6 +45,7 @@ class Config {
      */
     private static function setDefaults() {
         $defaults = [
+            'DB_TYPE' => 'sqlite',
             'DB_HOST' => 'localhost',
             'DB_NAME' => 'bloodmate',
             'DB_USER' => 'root',
