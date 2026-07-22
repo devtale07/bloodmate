@@ -19,16 +19,26 @@ class Database {
                    ";port=" . $this->config['port'] . 
                    ";charset=utf8mb4";
             
+            $options = [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false,
+                PDO::ATTR_PERSISTENT => false
+            ];
+
+            // Some managed MySQL providers (e.g. Aiven) require SSL.
+            // If a CA certificate path is configured, enable SSL on the connection.
+            $sslCa = Config::get('DB_SSL_CA');
+            if (!empty($sslCa) && file_exists($sslCa)) {
+                $options[PDO::MYSQL_ATTR_SSL_CA] = $sslCa;
+                $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+            }
+
             $this->conn = new PDO(
                 $dsn,
                 $this->config['username'],
                 $this->config['password'],
-                [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                    PDO::ATTR_EMULATE_PREPARES => false,
-                    PDO::ATTR_PERSISTENT => false
-                ]
+                $options
             );
         } catch(PDOException $exception) {
             error_log("Database connection error: " . $exception->getMessage());
