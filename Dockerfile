@@ -20,13 +20,14 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
+    libpq-dev \
     zip \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
 RUN docker-php-ext-install \
-    pdo_mysql \
+    pdo_pgsql \
     mbstring \
     exif \
     pcntl \
@@ -63,7 +64,7 @@ EXPOSE 80
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-    CMD php -r "try { \$opts = []; if (!empty(\$_ENV['DB_SSL_CA']) && file_exists(\$_ENV['DB_SSL_CA'])) { \$opts[PDO::MYSQL_ATTR_SSL_CA] = \$_ENV['DB_SSL_CA']; \$opts[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false; } \$pdo = new PDO('mysql:host=' . \$_ENV['DB_HOST'] . ';port=' . (\$_ENV['DB_PORT'] ?? 3306) . ';dbname=' . \$_ENV['DB_NAME'], \$_ENV['DB_USER'], \$_ENV['DB_PASSWORD'], \$opts); echo 'OK'; } catch(Exception \$e) { exit(1); }"
+    CMD php -r "try { \$dsn = 'pgsql:host=' . \$_ENV['DB_HOST'] . ';port=' . (\$_ENV['DB_PORT'] ?? 5432) . ';dbname=' . \$_ENV['DB_NAME']; if (!empty(\$_ENV['DB_SSLMODE'])) { \$dsn .= ';sslmode=' . \$_ENV['DB_SSLMODE']; } \$pdo = new PDO(\$dsn, \$_ENV['DB_USER'], \$_ENV['DB_PASSWORD']); echo 'OK'; } catch(Exception \$e) { exit(1); }"
 
 # Start Apache in foreground
 CMD ["apache2-foreground"]
