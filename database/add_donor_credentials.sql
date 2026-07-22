@@ -1,11 +1,13 @@
--- Add username and password_hash fields to donors table
--- This enables donor login with email credentials
+-- Add username and password_hash fields to donors table (PostgreSQL version)
+-- Note: Postgres doesn't support "AFTER column" placement - column order
+-- doesn't matter functionally, so it's omitted here.
 
-USE bloodmate;
+DO $$ BEGIN
+    ALTER TABLE donors ADD COLUMN username VARCHAR(50) UNIQUE;
+EXCEPTION WHEN duplicate_column THEN null; END $$;
 
-ALTER TABLE donors 
-ADD COLUMN username VARCHAR(50) UNIQUE AFTER email,
-ADD COLUMN password_hash VARCHAR(255) AFTER username;
+DO $$ BEGIN
+    ALTER TABLE donors ADD COLUMN password_hash VARCHAR(255);
+EXCEPTION WHEN duplicate_column THEN null; END $$;
 
--- Create index for username for faster lookups
-CREATE INDEX idx_donors_username ON donors(username);
+CREATE INDEX IF NOT EXISTS idx_donors_username ON donors(username);
